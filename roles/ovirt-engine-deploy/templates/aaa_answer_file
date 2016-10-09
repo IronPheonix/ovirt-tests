@@ -1,0 +1,12 @@
+[environment:default]
+OVAAALDAP_LDAP/profile=str:389ds
+OVAAALDAP_LDAP/useDNS=bool:False
+OVAAALDAP_LDAP/aaaProfileName=str:{{ aaa_profile_name }}
+OVAAALDAP_LDAP/serverset=str:single
+OVAAALDAP_LDAP/protocol=str:plain
+OVAAALDAP_LDAP/hosts=str:192.168.200.13
+OVAAALDAP_LDAP/user=str:uid=user1,ou=People,dc=mycompany,dc=local
+OVAAALDAP_LDAP/password=str:123456
+OVAAALDAP_LDAP/toolEnable=bool:False
+OVAAALDAP_LDAP/configOverwrite=bool:True
+OVAAALDAP_LDAP/useVmSso=bool:False

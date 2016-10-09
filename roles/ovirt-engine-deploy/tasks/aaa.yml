@@ -1,0 +1,48 @@
+---
+- name: Copy answer file
+  template:
+    src: aaa_answer_file
+    dest: /tmp/aaa_answer_file.conf
+    mode: 0644
+
+- name: Check if config exists
+  command: ls -l /etc/ovirt-engine/extensions.d/{{ aaa_authz_name }}.properties
+  register: ls
+  ignore_errors: yes
+
+- name: Configure 389ds extension
+  shell: ovirt-engine-extension-aaa-ldap-setup --config-append=/tmp/aaa_answer_file.conf
+  become: yes
+  when: ls.rc == 2
+  register: aaa_configured
+
+- name: Restart ovirt engine
+  service:
+    name: ovirt-engine
+    state: restarted
+  when: aaa_configured.changed
+  become: yes
+
+- name: Check health status of oVirt engine
+  uri:
+    url: "http://{{ovirt_engine_hostname}}/ovirt-engine/services/health"
+    status_code: 200
+  register: health_page
+  retries: 12
+  delay: 10
+  until: health_page|success
+  when: aaa_configured.changed
+
+# After oVirt restart we loose token
+- name: Login to oVirt
+  ovirt_auth:
+    url: https://{{ ovirt_engine_hostname }}/ovirt-engine/api
+    username: admin@internal
+    ca_file: /etc/pki/ovirt-engine/ca.pem
+    password: "{{ ovirt_engine_passsword }}"
+
+- name: Add user
+  ovirt_users:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ user }}"
+    authz_name: "{{ aaa_authz_name }}"

@@ -1,0 +1,153 @@
+---
+## Bootstrap
+- name: Add datacenter
+  ovirt_datacenters:
+    auth: "{{ ovirt_auth }}"
+    state: present
+    name: "{{ datacenter }}"
+    local: false
+    compatibility_version: "{{ compatibility_version }}"
+
+# TODO: add_dc_quota
+
+- name: Add cluster
+  ovirt_clusters:
+    auth: "{{ ovirt_auth }}"
+    state: present
+    name: "{{ cluster }}"
+    cpu_type: "{{ cpu_type }}"
+    compatibility_version: "{{ compatibility_version }}"
+    datacenter_name: "{{ datacenter }}"
+
+- name: Add host to oVirt engine
+  ovirt_hosts:
+    auth: "{{ ovirt_auth }}"
+    state: present
+    name: "host{{ item }}"
+    address: "192.168.200.1{{ item }}"
+    password: "{{ host_password }}"
+    cluster: "{{ cluster }}"
+  with_items:
+    - 1
+    - 2
+  async: 120
+  poll: 0
+  register: hosts
+
+- name: Wait for hosts to be added
+  async_status: "jid={{ item.ansible_job_id }}"
+  register: job_result
+  with_items: "{{ hosts.results }}"
+  until: job_result.finished
+  retries: 30
+  delay: 7
+
+# TODO: install_cockpit_ovirt
+
+- name: Add NFS storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ data_name }}"
+    host: host1
+    data_center: "{{ datacenter }}"
+    nfs:
+      address: 192.168.200.13
+      path: /exports/nfs_clean/share1
+
+- name: Get lun id
+  shell: multipath -ll -v1 |sort |head -n1
+  delegate_to: storage
+  become: yes
+  register: lun_id
+
+- name: Add iSCSI storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ data_name2 }}"
+    host: host1
+    data_center: "{{ datacenter }}"
+    iscsi:
+      address: 192.168.200.13
+      target: iqn.2014-07.org.ovirt:storage
+      lun_id: "{{ lun_id.stdout }}"
+  async: 120
+  poll: 0
+  register: data_iscsi
+
+- name: Add export storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    host: host1
+    name: "{{ export_name }}"
+    data_center: "{{ datacenter }}"
+    domain_function: export
+    nfs:
+      address: 192.168.200.13
+      path: /exports/nfs_exported
+  async: 120
+  poll: 0
+  register: iso_nfs
+
+- name: Add iso storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    host: host1
+    name: "{{ iso_name }}"
+    data_center: "{{ datacenter }}"
+    domain_function: iso
+    nfs:
+      address: 192.168.200.13
+      path: /exports/iso
+  async: 120
+  poll: 0
+  register: export_nfs
+
+- name: Wait for storages to be added
+  async_status: "jid={{ item.ansible_job_id }}"
+  register: job_result
+  with_items:
+    - "{{ data_iscsi }}"
+    - "{{ iso_nfs }}"
+    - "{{ export_nfs }}"
+  until: job_result.finished
+  retries: 30
+  delay: 5
+#
+
+# TODO: import_templates
+# TODO: generic_import_from_glance
+# TODO: list_glance_images
+# TODO: import_non_template_from_glance
+
+- name: Import template from glance
+  ovirt_templates:
+    auth: "{{ ovirt_auth }}"
+    state: imported
+    name: "{{ template }}"
+    image_provider:  "{{ image_provider }}"
+    image_disk: "{{ cirros_image }}"
+    storage_domain: "{{ data_name }}"
+    cluster: "{{ cluster }}"
+
+# TODO: set_dc_quota_audit
+# TODO: add_quota_storage_limits
+# TODO: add_quota_cluster_limits
+
+- name: Add VM network
+  ovirt_networks:
+    auth: "{{ ovirt_auth }}"
+    datacenter_name: "{{ datacenter }}"
+    name: "{{ vlan_100 }}"
+    vlan_tag: 100
+    vm_network: true
+    description: VM Network on VLAN 100
+
+- name: Add non VM network
+  ovirt_networks:
+    auth: "{{ ovirt_auth }}"
+    datacenter_name: "{{ datacenter }}"
+    name: "{{ vlan_200 }}"
+    vlan_tag: 200
+    vm_network: false
+    description: Non VM Network on VLAN 200, MTU 9000
+    # TODO: MTU

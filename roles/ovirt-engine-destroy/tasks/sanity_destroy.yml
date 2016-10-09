@@ -1,0 +1,16 @@
+---
+## Destroy sanity objects
+- name: Remove scratch VM
+  ovirt_vms:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "{{ item }}"
+  with_items:
+    - "{{ vm0 }}"
+    - "{{ vm1 }}"
+
+- name: Remove template
+  ovirt_templates:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "{{ template }}"

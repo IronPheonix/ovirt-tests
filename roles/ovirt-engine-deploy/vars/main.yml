@@ -1,0 +1,25 @@
+---
+## Bootstrap variables:
+datacenter: test_dc
+cluster: test_cluster
+cpu_type: Intel Conroe Family
+compatibility_version: 4.0
+host_password: vagrant
+data_name: data
+data_name2: data2
+export_name: export
+iso_name: iso
+vlan_200: VLAN200_Network
+vlan_100: VLAN100_Network
+
+## Sanity variables:
+vm0: myvm0
+vm1: myvm1
+image_provider: ovirt-image-repository
+cirros_image: CirrOS 0.3.4 for x86_64
+template: cirros_template
+
+## AAA variables:
+aaa_profile_name: mycompany
+aaa_authz_name: mycompany-authz
+user: user1

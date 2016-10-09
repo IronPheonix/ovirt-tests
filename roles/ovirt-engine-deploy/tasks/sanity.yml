@@ -1,0 +1,93 @@
+---
+## Sanity
+- name: Add VM from scratch
+  ovirt_vms:
+    auth: "{{ ovirt_auth }}"
+    state: stopped
+    name: "{{ vm0 }}"
+    cluster: "{{ cluster }}"
+    memory: 512MiB
+    memory_guaranteed: 512MiB
+    nics:
+      - name: nic1
+
+- name: Add disk to VM
+  ovirt_disks:
+    auth: "{{ ovirt_auth }}"
+    name: disk_name_vm0
+    vm_name: "{{ vm0 }}"
+    size: 10GiB
+    format: cow
+    interface: virtio
+    storage_domain: "{{ data_name }}"
+
+- name: Get lun id
+  shell: multipath -ll -v1 |sort |tail -n1
+  delegate_to: storage
+  become: yes
+  register: lun_id
+
+- name: Add LUN to VM
+  ovirt_disks:
+    auth: "{{ ovirt_auth }}"
+    name: disk2_name_vm0
+    vm_name: "{{ vm0 }}"
+    interface: virtio
+    logical_unit:
+      address: 192.168.200.13
+      target: iqn.2014-07.org.ovirt:storage
+      id: "{{ lun_id.stdout }}"
+
+# TODO: snapshot_merge
+
+- name: Add VM from template
+  ovirt_vms:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ vm1 }}"
+    cluster: "{{ cluster }}"
+    template: "{{ template }}"
+    operating_system: other_linux
+    type: server
+    cpu_cores: 1
+    cpu_sockets: 1
+    host: host1
+    # TODO: display, serial_number, timezone
+
+- name: Migrate VM
+  ovirt_vms:
+    auth: "{{ ovirt_auth }}"
+    state: running
+    name: "{{ vm1 }}"
+    host: host2
+
+- name: Export template
+  ovirt_templates:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ template }}"
+    state: exported
+    export_domain: "{{ export_name }}"
+    cluster: "{{ cluster }}"
+
+# TODO: snapshot_live_merge
+
+#- name: Hotplug NIC
+#  ovirt_nics:
+#    auth: "{{ ovirt_auth }}"
+#    state: present
+#    vm_name: "{{ vm1 }}"
+#    name: nic2
+#    interface: virtio
+#    profile: ovirtmgmt
+
+- name: Hotplug disk to VM
+  ovirt_disks:
+    auth: "{{ ovirt_auth }}"
+    name: disk_name_vm1
+    vm_name: "{{ vm1 }}"
+    size: 1GiB
+    format: cow
+    interface: virtio
+    storage_domain: "{{ data_name }}"
+
+# TODO: add_event
+

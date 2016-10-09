@@ -1,0 +1,35 @@
+---
+- name: Login to oVirt
+  ovirt_auth:
+    url: https://{{ ovirt_engine_hostname }}/ovirt-engine/api
+    username: admin@internal
+    ca_file: /etc/pki/ovirt-engine/ca.pem
+    password: "{{ ovirt_engine_passsword }}"
+  tags:
+    - aaa
+    - sanity
+    - bootstrap
+
+- name: Include aaa tasks
+  include: aaa_destroy.yml
+  tags:
+    - aaa
+
+- name: Include sanity tasks
+  include: sanity_destroy.yml
+  tags:
+    - sanity
+
+- name: Include bootstrap tasks
+  include: bootstrap_destroy.yml
+  tags:
+    - bootstrap
+
+- name: Logout from oVirt
+  ovirt_auth:
+    state: absent
+    ovirt_auth: "{{ ovirt_auth }}"
+  tags:
+    - aaa
+    - sanity
+    - bootstrap

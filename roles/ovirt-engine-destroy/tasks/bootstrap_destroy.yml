@@ -1,0 +1,81 @@
+---
+- name: Remove VM network
+  ovirt_networks:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    datacenter_name: "{{ datacenter }}"
+    name: "{{ vlan_100 }}"
+
+- name: Remove non VM network
+  ovirt_networks:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    datacenter_name: "{{ datacenter }}"
+    name: "{{ vlan_200 }}"
+
+- name: Remove iSCSI storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "{{ data_name2 }}"
+    host: host1
+    format: true
+    data_center: "{{ datacenter }}"
+
+- name: Remove export storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    host: host1
+    name: "{{ export_name }}"
+    format: true
+    data_center: "{{ datacenter }}"
+
+- name: Remove iso storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    host: host1
+    name: "{{ iso_name }}"
+    format: true
+    data_center: "{{ datacenter }}"
+
+- name: Deactivate master storage domain
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    state: maintenance
+    name: "{{ data_name }}"
+    data_center: "{{ datacenter }}"
+  # Ignore errors, since data may not exists
+  # and we don't want to create it:
+  ignore_errors: yes
+
+- name: Remove datacenter
+  ovirt_datacenters:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "{{ datacenter }}"
+ 
+- name: Remove master storage
+  ovirt_storage_domains:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    host: host1
+    name: "{{ data_name }}"
+    format: true
+    data_center: "{{ datacenter }}"
+
+- name: Remove hosts from oVirt engine
+  ovirt_hosts:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "host{{ item }}"
+  with_items:
+    - 1
+    - 2
+
+- name: Remove cluster
+  ovirt_clusters:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "{{ cluster }}"

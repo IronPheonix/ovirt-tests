@@ -1,0 +1,13 @@
+---
+- name: Deploy oVirt engine
+  hosts: engine
+  gather_facts: no
+  vars:
+    ovirt_engine_passsword: 123456
+    ovirt_engine_hostname: ovirt.local
+    destroy: false
+
+  roles:
+    - { role: ovirt-engine-setup, tags: ['setup'] }
+    - { role: ovirt-engine-deploy, tags: ['deploy'] }
+    - { role: ovirt-engine-destroy, when: "destroy", tags: ['destroy'] }

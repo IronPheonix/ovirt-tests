@@ -1,0 +1,23 @@
+---
+- name: Remove user
+  ovirt_users:
+    state: absent
+    auth: "{{ ovirt_auth }}"
+    name: "{{ user }}"
+    authz_name: "{{ aaa_authz_name }}"
+
+- name: Remove AAA files
+  file:
+    state: absent
+    path: /etc/ovirt-engine/{{ item }}.properties
+  become: yes
+  with_items:
+    - extensions.d/{{ aaa_authz_name }}
+    - extensions.d/{{ aaa_profile_name }}-authn
+    - aaa/{{ aaa_profile_name }}
+
+- name: Remove answer file
+  file:
+    state: absent
+    path: /tmp/aaa_answer_file.conf
+
