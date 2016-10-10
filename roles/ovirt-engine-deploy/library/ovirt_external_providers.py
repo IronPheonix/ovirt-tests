@@ -116,6 +116,15 @@ class ExternalProviderModule(BaseModule):
 
         return provider_type
 
+    def update_check(self, entity):
+        return (
+            equal(self._module.params.get('description'), entity.description) and
+            equal(self._module.params.get('url'), entity.url) and
+            equal(self._module.params.get('authentication_url'), entity.authentication_url) and
+            equal(self._module.params.get('tenant_name'), entity.tenant_name) and
+            equal(self._module.params.get('username'), entity.username)
+        )
+
 
 def get_external_provider_service(provider_type, system_service):
     if provider_type == 'os_image':
@@ -178,8 +187,7 @@ def main():
             ret = external_providers_module.create()
 
         module.exit_json(**ret)
-    except sdk.Error as e:
-        # sdk.Error returns descriptive error message, just pass it to ansible
+    except Exception as e:
         module.fail_json(msg=str(e))
     finally:
         # Close the connection to the server, don't revoke token:

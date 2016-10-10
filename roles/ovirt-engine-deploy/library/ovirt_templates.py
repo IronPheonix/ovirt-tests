@@ -141,6 +141,7 @@ class TemplatesModule(BaseModule):
     def _get_export_domain_service(self):
         provider_name = self._module.params['export_domain'] or self._module.params['image_provider']
         if self._module.params['image_provider']:
+            # Can be removed when python sdk v 4.0.3
             export_sds_service = self._connection.system_service().openstack_image_providers_service()
         else:
             export_sds_service = self._connection.system_service().storage_domains_service()
@@ -225,6 +226,11 @@ def main():
 
             kwargs = {}
             if module.params['image_provider']:
+                # FIXME: TEMP WorkAround
+                sd = connection.system_service().storage_domains_service().list(search='name=%s' % module.params['image_provider'])[0]
+                connection.system_service().storage_domains_service().service(sd.id).images_service().list()
+                ########################
+
                 kwargs.update(
                     disk=otypes.Disk(
                         name=module.params['image_disk']
@@ -260,8 +266,7 @@ def main():
                 time.sleep(5)
 
         module.exit_json(**ret)
-    except sdk.Error as e:
-        # sdk.Error returns descriptive error message, just pass it to ansible
+    except Exception as e:
         module.fail_json(msg=str(e))
     finally:
         # Close the connection to the server, don't revoke token:

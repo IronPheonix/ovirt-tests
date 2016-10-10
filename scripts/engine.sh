@@ -14,11 +14,5 @@ cat > /root/iso-uploader.conf << EOF
 [ISOUploader]
 user=admin@internal
 passwd=123456
-engine=localhost:443
+engine=ovirt.local:443
 EOF
-
-# Enable debug logs on the engine
-sed -i \
-    -e '/.*logger category="org.ovirt"/{ n; s/INFO/DEBUG/ }' \
-    -e '/.*<root-logger>/{ n; s/INFO/DEBUG/ }' \
-    /usr/share/ovirt-engine/services/ovirt-engine/ovirt-engine.xml.in

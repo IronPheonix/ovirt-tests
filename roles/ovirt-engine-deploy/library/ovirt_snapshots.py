@@ -226,8 +226,7 @@ def main():
         elif state == 'absent':
             ret = remove_snapshot(module, vm_service, snapshots_service)
         module.exit_json(**ret)
-    except sdk.Error as e:
-        # sdk.Error returns descriptive error message, just pass it to ansible
+    except Exception as e:
         module.fail_json(msg=str(e))
     finally:
         # Close the connection to the server, don't revoke token:

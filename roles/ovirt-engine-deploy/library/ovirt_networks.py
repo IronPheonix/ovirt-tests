@@ -149,8 +149,7 @@ def main():
             ret = networks_module.remove(entity=network)
 
         module.exit_json(**ret)
-    except sdk.Error as e:
-        # sdk.Error returns descriptive error message, just pass it to ansible
+    except Exception as e:
         module.fail_json(msg=str(e))
     finally:
         # Close the connection to the server, don't revoke token:
