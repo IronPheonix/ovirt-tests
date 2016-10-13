@@ -23,3 +23,4 @@ template: cirros_template
 aaa_profile_name: mycompany
 aaa_authz_name: mycompany-authz
 user: user1
+group: group1
