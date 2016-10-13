@@ -46,3 +46,9 @@
     auth: "{{ ovirt_auth }}"
     name: "{{ user }}"
     authz_name: "{{ aaa_authz_name }}"
+
+- name: Add Group
+  ovirt_groups:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ group }}"
+    authz_name: "{{ aaa_authz_name }}"

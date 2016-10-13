@@ -205,6 +205,16 @@ userPassword: {SSHA}1e/GY7pCEhoL5yMR8HvjI7+3me6PQtxZ
 # Password is 123456
 EOC
 
+cat >> add_group.ldif <<EOC
+dn: cn=group1,ou=Groups,dc=mycompany,dc=local
+objectClass: top
+objectClass: groupofuniquenames
+uniqueMember: uid=user1,ou=People,dc=mycompany,dc=local
+cn: group1
+EOC
+
+
 echo "$ADDR $HOSTNAME" >> /etc/hosts
 /usr/sbin/setup-ds.pl --silent --file=answer_file.inf
 ldapadd -x -H ldap://localhost -D 'cn=Directory Manager' -w $PASSWORD -f add_user.ldif
+ldapadd -x -H ldap://localhost -D 'cn=Directory Manager' -w $PASSWORD -f add_group.ldif
