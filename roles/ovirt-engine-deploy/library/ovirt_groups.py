@@ -82,6 +82,37 @@ ovirt_groups:
     domain: example.com-authz
 '''
 
+RETURN = '''
+id:
+    description: ID of the group which is managed
+    returned: On success if group is found.
+    type: str
+    sample: 7de90f31-222c-436c-a1ca-7e655bd5b60c
+group:
+    description: "Dictionary of all the group attributes. Group attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/group."
+    returned: On success if group is found.
+'''
+
+
+def _group(connection, module):
+    groups = connection.system_service().groups_service().list(
+        search="name={name}".format(
+            name=module.params['name'],
+        )
+    )
+
+    # If found more groups, filter them by namespace and authz name:
+    # (filtering here, as oVirt backend doesn't support it)
+    if len(groups) > 1:
+        groups = [
+            g for g in groups if (
+                equal(module.params['namespace'], g.namespace) and
+                equal(module.params['authz_name'], g.domain.name)
+            )
+        ]
+    return groups[0] if groups else None
+
 
 class GroupsModule(BaseModule):
 
@@ -120,37 +151,12 @@ def main():
             module=module,
             service=groups_service,
         )
-        group = search_by_name(
-            service=groups_service,
-            name=module.params['name'],
-            namespace=module.params['namespace'],
-        )
-
+        group = _group(connection, module)
         state = module.params['state']
         if state == 'present':
-            # Passing `search_params` along with entity is hack here,
-            # because it's not possible to find group by it's namespace,
-            # and if group is not found by `search_by_name` method, by
-            # filtering object attributes, it should be found even,
-            # by `create` method, that's why we need to pass everything
-            # here and not empty `search_params` otherwise only `name`
-            # would be used. In future if oVirt backend will support search
-            # by namespace, we can remove it:
-            ret = groups_module.create(
-                entity=group,
-                search_params={
-                    'name': module.params['name'],
-                    'namespace': module.params['namespace'],
-                }
-            )
+            ret = groups_module.create(entity=group)
         elif state == 'absent':
-            ret = groups_module.remove(
-                entity=group,
-                search_params={
-                    'name': module.params['name'],
-                    'namespace': module.params['namespace'],
-                }
-            )
+            ret = groups_module.remove(entity=group)
 
         module.exit_json(**ret)
     except Exception as e:

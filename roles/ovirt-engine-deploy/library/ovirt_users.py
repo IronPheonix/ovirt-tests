@@ -76,6 +76,18 @@ ovirt_users:
     authz_name: example.com-authz
 '''
 
+RETURN = '''
+id:
+    description: ID of the user which is managed
+    returned: On success if user is found.
+    type: str
+    sample: 7de90f31-222c-436c-a1ca-7e655bd5b60c
+user:
+    description: "Dictionary of all the user attributes. User attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/user."
+    returned: On success if user is found.
+'''
+
 
 class UsersModule(BaseModule):
 
