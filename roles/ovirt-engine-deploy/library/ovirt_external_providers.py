@@ -1,29 +1,29 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
 #
 # Copyright (c) 2016 Red Hat, Inc.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# This file is part of Ansible
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 try:
     import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
-    HAS_SDK = True
 except ImportError:
-    HAS_SDK = False
+    pass
 
 from ansible.module_utils.ovirt import *
 
@@ -32,14 +32,14 @@ DOCUMENTATION = '''
 ---
 module: ovirt_external_providers
 short_description: Module to manage external providers in oVirt
-version_added: "2.2"
+version_added: "2.3"
 author: "Ondra Machacek (@machacekondra)"
 description:
     - "Module to manage external providers in oVirt"
 options:
     name:
         description:
-            - "Name of the the external provider to manage. Required if C(state) is not I(imported) storage."
+            - "Name of the the external provider to manage."
     state:
         description:
             - "Should the external be present or absent"
@@ -50,8 +50,8 @@ options:
             - "Description of the external provider."
     type:
         description:
-            - "Description of the external provider."
-        choices: ['os_image', 'os_network', 'os_volume',  'foreman']
+            - "Type of the external provider."
+        choices: ['os_image', 'os_network', 'os_volume', 'foreman']
     url:
         description:
             - "URL where external provider is hosted."
@@ -78,6 +78,7 @@ options:
         description:
             - "Name of the data center where provider should be attached."
             - "Applicable for those type: I(os_volume)."
+extends_documentation_fragment: ovirt
 '''
 
 EXAMPLES = '''
@@ -100,6 +101,35 @@ EXAMPLES = '''
     name: image_provider
     type: os_image
 '''
+
+RETURN = '''
+id:
+    description: ID of the external provider which is managed
+    returned: On success if external provider is found.
+    type: str
+    sample: 7de90f31-222c-436c-a1ca-7e655bd5b60c
+external_host_provider:
+    description: "Dictionary of all the external_host_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/external_host_provider.
+                  This attribute is returned in case user send 'type: foreman' parameter."
+    returned: On success if external provider is found.
+openstack_image_provider:
+    description: "Dictionary of all the openstack_image_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_image_provider.
+                  This attribute is returned in case user send 'type: os_image' parameter."
+    returned: On success if external provider is found.
+openstack_volume_provider:
+    description: "Dictionary of all the openstack_volume_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_volume_provider.
+                  This attribute is returned in case user send 'type: os_volume' parameter."
+    returned: On success if external provider is found.
+openstack_network_provider:
+    description: "Dictionary of all the openstack_network_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_network_provider.
+                  This attribute is returned in case user send 'type: os_network' parameter."
+    returned: On success if external provider is found.
+'''
+
 
 class ExternalProviderModule(BaseModule):
 
@@ -126,7 +156,7 @@ class ExternalProviderModule(BaseModule):
         )
 
 
-def get_external_provider_service(provider_type, system_service):
+def _external_provider_service(provider_type, system_service):
     if provider_type == 'os_image':
         return otypes.OpenStackImageProvider, system_service.openstack_image_providers_service()
     elif provider_type == 'os_network':
@@ -155,7 +185,7 @@ def main():
         ),
         url=dict(default=None),
         username=dict(default=None),
-        password=dict(default=None),
+        password=dict(default=None, no_log=True),
         tenant_name=dict(default=None, aliases=['tenant']),
         authentication_url=dict(default=None, aliases=['auth_url']),
         data_center=dict(default=None, aliases=['data_center']),
@@ -169,7 +199,7 @@ def main():
 
     try:
         connection = create_connection(module.params.pop('auth'))
-        provider_type, external_providers_service = get_external_provider_service(
+        provider_type, external_providers_service = _external_provider_service(
             provider_type=module.params.pop('type'),
             system_service=connection.system_service(),
         )
@@ -190,7 +220,6 @@ def main():
     except Exception as e:
         module.fail_json(msg=str(e))
     finally:
-        # Close the connection to the server, don't revoke token:
         connection.close(logout=False)
 
 
