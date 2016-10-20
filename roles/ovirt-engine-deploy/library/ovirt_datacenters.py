@@ -22,9 +22,8 @@
 try:
     import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
-    HAS_SDK = True
 except ImportError:
-    HAS_SDK = False
+    pass
 
 from ansible.module_utils.ovirt import *
 
@@ -75,7 +74,7 @@ EXAMPLES = '''
 - ovirt_datacenters:
     name: mydatacenter
     local: True
-    compatibility_version: 4.1
+    compatibility_version: 4.0
     quota_mode: enabled
 
 # Remove datacenter

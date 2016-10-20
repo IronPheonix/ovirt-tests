@@ -19,6 +19,8 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import fnmatch
+
 try:
     import ovirtsdk4 as sdk
 except ImportError:
@@ -29,20 +31,22 @@ from ansible.module_utils.ovirt import *
 
 DOCUMENTATION = '''
 ---
-module: ovirt_datacenters_facts
-short_description: Retrieve facts about one or more oVirt datacenters
-author: "Ondra Machacek (@machacekondra)"
+module: ovirt_quotas_facts
+short_description: Retrieve facts about one or more oVirt quotas
 version_added: "2.3"
 description:
-    - "Retrieve facts about one or more oVirt datacenters."
+    - "Retrieve facts about one or more oVirt quotas."
 notes:
-    - "This module creates a new top-level C(ovirt_datacenters) fact, which
-       contains a list of datacenters."
+    - "This module creates a new top-level C(ovirt_quotas) fact, which
+       contains a list of quotas."
 options:
-    pattern:
-      description:
-        - "Search term which is accepted by oVirt search backend."
-        - "For example to search datacenter I(X) use following pattern: I(name=X)"
+    datacenter:
+        description:
+            - "Name of the datacenter where quota resides."
+        required: true
+    name:
+        description:
+            - "Name of the quota, can be used as glob expression."
 extends_documentation_fragment: ovirt
 '''
 
@@ -50,17 +54,18 @@ EXAMPLES = '''
 # Examples don't contain auth parameter for simplicity,
 # look at ovirt_auth module to see how to reuse authentication:
 
-# Gather facts about all data centers which names start with C<production>:
-- ovirt_datacenters_facts:
-    pattern: name=production*
+# Gather facts about quota named C<myquota> in Default datacenter:
+- ovirt_quotas_facts:
+    datacenter: Default
+    name: myquota
 - debug:
-    var: ovirt_datacenters
+    var: ovirt_quotas
 '''
 
 RETURN = '''
-ovirt_datacenters:
-    description: "List of dictionaries describing the datacenters. Datacenter attribues are mapped to dictionary keys,
-                  all datacenters attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/data_center."
+ovirt_quotas:
+    description: "List of dictionaries describing the quotas. Quota attribues are mapped to dictionary keys,
+                  all quotas attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/quota."
     returned: On success.
     type: list
 '''
@@ -68,7 +73,8 @@ ovirt_datacenters:
 
 def main():
     argument_spec = ovirt_full_argument_spec(
-        pattern=dict(default='', required=False),
+        datacenter=dict(required=True),
+        name=dict(default=None),
     )
     module = AnsibleModule(argument_spec)
     check_sdk(module)
@@ -76,12 +82,25 @@ def main():
     try:
         connection = create_connection(module.params.pop('auth'))
         datacenters_service = connection.system_service().data_centers_service()
-        datacenters = datacenters_service.list(search=module.params['pattern'])
+        dc_name = module.params['datacenter']
+        dc = search_by_name(datacenters_service, dc_name)
+        if dc is None:
+            raise Exception("Datacenter '%s' was not found." % dc_name)
+
+        quotas_service = datacenters_service.service(dc.id).quotas_service()
+        if module.params['name']:
+            quotas = [
+                e for e in quotas_service.list()
+                if fnmatch.fnmatch(e.name, module.params['name'])
+            ]
+        else:
+            quotas = quotas_service.list()
+
         module.exit_json(
             changed=False,
             ansible_facts=dict(
-                ovirt_datacenters=[
-                    get_dict_of_struct(c) for c in datacenters
+                ovirt_quotas=[
+                    get_dict_of_struct(c) for c in quotas
                 ],
             ),
         )

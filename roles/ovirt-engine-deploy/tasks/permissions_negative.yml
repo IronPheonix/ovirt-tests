@@ -1,0 +1,59 @@
+---
+- name: Add permission to non existing user
+  ovirt_permissions:
+    auth: "{{ ovirt_auth }}"
+    authz_name: "{{ aaa_authz_name }}"
+    user_name: aaaaaaaaaaaaaaaaa
+    object_type: data_center
+    object_name: Default
+  ignore_errors: yes
+  register: noexist_user
+  tags:
+    - permissions
+
+- name: Add permission to non existing authz
+  ovirt_permissions:
+    auth: "{{ ovirt_auth }}"
+    authz_name: aaaaaaaaaaaaaaaa
+    user_name: "{{ user }}"
+    object_type: data_center
+    object_name: Default
+  ignore_errors: yes
+  register: noexist_authz
+  tags:
+    - permissions
+
+- name: Add permission to non existing object type
+  ovirt_permissions:
+    auth: "{{ ovirt_auth }}"
+    authz_name: "{{ aaa_authz_name }}"
+    user_name: "{{ user }}"
+    object_type: aaaaaa
+    object_name: Default
+  ignore_errors: yes
+  register: noexist_type
+  tags:
+    - permissions
+
+- name: Add permission to non existing object name
+  ovirt_permissions:
+    auth: "{{ ovirt_auth }}"
+    authz_name: "{{ aaa_authz_name }}"
+    user_name: "{{ user }}"
+    object_type: data_center
+    object_name: aaaaaaaaaaaaaaa
+  ignore_errors: yes
+  register: noexist_name
+  tags:
+    - permissions
+
+- name:
+  assert:
+    that:
+      - "'was not found' in noexist_user.msg"
+      - "'was not found' in noexist_name.msg"
+      - "'was not found' in noexist_authz.msg"
+      - noexist_user|failed
+      - noexist_authz|failed
+      - noexist_type|failed
+      - noexist_name|failed

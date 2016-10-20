@@ -1,0 +1,33 @@
+---
+- name: Add nonexisting user
+  ovirt_users:
+    auth: "{{ ovirt_auth }}"
+    name: aaaaa
+    authz_name: "{{ aaa_authz_name }}"
+  register: nonexists_user
+  ignore_errors: true
+
+- name: Add nonexisting authz
+  ovirt_users:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ user }}"
+    authz_name: aaaaaa
+  register: nonexists_authz
+  ignore_errors: true
+
+- name: Add nonexisting group
+  ovirt_groups:
+    auth: "{{ ovirt_auth }}"
+    name: aaaa
+    authz_name: "{{ aaa_authz_name }}"
+  register: nonexists_group
+  ignore_errors: true
+
+- name: Assert user groups negative tests results
+  assert:
+    that:
+      - "'Entity not found' in nonexists_user.msg"
+      - "'Entity not found' in nonexists_group.msg"
+      - nonexists_user|failed
+      - nonexists_group|failed
+      - nonexists_authz|failed

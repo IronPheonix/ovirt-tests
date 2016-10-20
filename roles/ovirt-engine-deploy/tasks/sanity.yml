@@ -50,8 +50,16 @@
     type: server
     cpu_cores: 1
     cpu_sockets: 1
-    host: host1
     # TODO: display, serial_number, timezone
+
+- name: vm
+  ovirt_vms_facts:
+    auth: "{{ ovirt_auth }}"
+    pattern: "name=m* and cluster=t*"
+
+- name: d
+  debug:
+    var: ovirt_vms
 
 - name: Migrate VM
   ovirt_vms:
@@ -70,14 +78,25 @@
 
 # TODO: snapshot_live_merge
 
-#- name: Hotplug NIC
-#  ovirt_nics:
-#    auth: "{{ ovirt_auth }}"
-#    state: present
-#    vm_name: "{{ vm1 }}"
-#    name: nic2
-#    interface: virtio
-#    profile: ovirtmgmt
+- name: Hotplug NIC
+  ovirt_nics:
+    auth: "{{ ovirt_auth }}"
+    state: present
+    vm: "{{ vm1 }}"
+    name: nic2
+    interface: e1000
+    profile: ovirtmgmt
+    network: ovirtmgmt
+
+- name: nics
+  ovirt_nics_facts:
+    auth: "{{ ovirt_auth }}"
+    vm: "{{ vm1 }}"
+    name: a*
+
+- name: nics
+  debug:
+    var: ovirt_nics
 
 - name: Hotplug disk to VM
   ovirt_disks:
@@ -91,3 +110,13 @@
 
 # TODO: add_event
 
+- name: Create vm pool
+  ovirt_vmpools:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ vmpool }}"
+    cluster: "{{ cluster }}"
+    template: "{{ template }}"
+    vm_count: 2
+    vm_per_user: 1
+    prestarted: 1
+    type: automatic

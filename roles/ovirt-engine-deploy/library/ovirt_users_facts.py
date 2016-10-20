@@ -26,19 +26,18 @@ except ImportError:
 
 from ansible.module_utils.ovirt import *
 
+
 DOCUMENTATION = '''
 ---
 module: ovirt_users_facts
 short_description: Retrieve facts about one or more oVirt users
+author: "Ondra Machacek (@machacekondra)"
 version_added: "2.3"
 description:
     - "Retrieve facts about one or more oVirt users."
 notes:
     - "This module creates a new top-level C(ovirt_users) fact, which
        contains a list of users."
-requirements:
-    - python >= 2.7
-    - ovirt-engine-sdk-python >= 4.0.0
 options:
     pattern:
       description:
@@ -51,7 +50,7 @@ EXAMPLES = '''
 # Examples don't contain auth parameter for simplicity,
 # look at ovirt_auth module to see how to reuse authentication:
 
-# Gather facts about all users stars on string C<john*>:
+# Gather facts about all users stars on string C<john>:
 - ovirt_users_facts:
     pattern: name=john*
 - debug:
@@ -60,10 +59,10 @@ EXAMPLES = '''
 
 RETURN = '''
 ovirt_users:
-    description: "Dictionary describing the users. User attribues are mapped to dictionary keys,
+    description: "List of dictionaries describing the users. User attribues are mapped to dictionary keys,
                   all users attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/user."
     returned: On success.
-    type: dictionary
+    type: list
 '''
 
 

@@ -6,6 +6,7 @@
     ovirt_engine_passsword: 123456
     ovirt_engine_hostname: ovirt.local
     destroy: false
+    negative: false
 
   roles:
     - { role: ovirt-engine-setup, tags: ['setup'] }

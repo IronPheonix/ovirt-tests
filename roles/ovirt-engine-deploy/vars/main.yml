@@ -18,6 +18,7 @@ vm1: myvm1
 image_provider: ovirt-image-repository
 cirros_image: CirrOS 0.3.4 for x86_64
 template: cirros_template
+vmpool: mypool
 
 ## AAA variables:
 aaa_profile_name: mycompany

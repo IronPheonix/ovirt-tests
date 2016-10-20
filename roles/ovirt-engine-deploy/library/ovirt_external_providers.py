@@ -61,7 +61,7 @@ options:
             - "Username to be used for login to external provider."
             - "Applicable for all types."
     password:
-        description::
+        description:
             - "Password of the user specified in C(username) parameter."
             - "Applicable for all types."
     tenant_name:
@@ -110,24 +110,24 @@ id:
     sample: 7de90f31-222c-436c-a1ca-7e655bd5b60c
 external_host_provider:
     description: "Dictionary of all the external_host_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/external_host_provider.
-                  This attribute is returned in case user send 'type: foreman' parameter."
-    returned: On success if external provider is found.
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/external_host_provider."
+    returned: "On success and if parameter 'type: foreman' is used."
+    type: dictionary
 openstack_image_provider:
     description: "Dictionary of all the openstack_image_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_image_provider.
-                  This attribute is returned in case user send 'type: os_image' parameter."
-    returned: On success if external provider is found.
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_image_provider."
+    returned: "On success and if parameter 'type: os_image' is used."
+    type: dictionary
 openstack_volume_provider:
     description: "Dictionary of all the openstack_volume_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_volume_provider.
-                  This attribute is returned in case user send 'type: os_volume' parameter."
-    returned: On success if external provider is found.
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_volume_provider."
+    returned: "On success and if parameter 'type: os_volume' is used."
+    type: dictionary
 openstack_network_provider:
     description: "Dictionary of all the openstack_network_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_network_provider.
-                  This attribute is returned in case user send 'type: os_network' parameter."
-    returned: On success if external provider is found.
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_network_provider."
+    returned: "On success and if parameter 'type: os_network' is used."
+    type: dictionary
 '''
 
 

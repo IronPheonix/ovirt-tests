@@ -35,7 +35,7 @@ short_description: Module to manage users in oVirt
 version_added: "2.3"
 author: "Ondra Machacek (@machacekondra)"
 description:
-    - "Module to manage users in oVirt"
+    - "Module to manage users in oVirt."
 options:
     name:
         description:
@@ -89,6 +89,10 @@ user:
 '''
 
 
+def username(module):
+    return '{}@{}'.format(module.params['name'], module.params['authz_name'])
+
+
 class UsersModule(BaseModule):
 
     def build_entity(self):
@@ -96,10 +100,7 @@ class UsersModule(BaseModule):
             domain=otypes.Domain(
                 name=self._module.params['authz_name']
             ),
-            user_name='{}@{}'.format(
-                self._module.params['name'],
-                self._module.params['authz_name']
-            ),
+            user_name=username(self._module),
             principal=self._module.params['name'],
             namespace=self._module.params['namespace'],
         )
@@ -135,19 +136,13 @@ def main():
         if state == 'present':
             ret = users_module.create(
                 search_params={
-                    'usrname': '{}@{}'.format(
-                        module.params['name'],
-                        module.params['authz_name']
-                    )
+                    'usrname': username(module),
                 }
             )
         elif state == 'absent':
             ret = users_module.remove(
                 search_params={
-                    'usrname': '{}@{}'.format(
-                        module.params['name'],
-                        module.params['authz_name']
-                    )
+                    'usrname': username(module),
                 }
             )
 

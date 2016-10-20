@@ -29,40 +29,40 @@ from ansible.module_utils.ovirt import *
 
 DOCUMENTATION = '''
 ---
-module: ovirt_networks_facts
-short_description: Retrieve facts about one or more oVirt networks
+module: ovirt_hosts_facts
+short_description: Retrieve facts about one or more oVirt hosts
 author: "Ondra Machacek (@machacekondra)"
 version_added: "2.3"
 description:
-    - "Retrieve facts about one or more oVirt networks."
+    - "Retrieve facts about one or more oVirt hosts."
 notes:
-    - "This module creates a new top-level C(ovirt_networks) fact, which
-       contains a list of networks."
+    - "This module creates a new top-level C(ovirt_hosts) fact, which
+       contains a list of hosts."
 options:
     pattern:
       description:
         - "Search term which is accepted by oVirt search backend."
-        - "For example to search network starting with string vlan1 use: name=vlan1*"
+        - "For example to search host X from datacenter Y use following pattern:
+           name=X and datacenter=Y"
 extends_documentation_fragment: ovirt
 '''
-
 
 EXAMPLES = '''
 # Examples don't contain auth parameter for simplicity,
 # look at ovirt_auth module to see how to reuse authentication:
 
-# Gather facts about all networks which names start with C(vlan1):
-- ovirt_networks_facts:
-    pattern: name=vlan1*
+# Gather facts about all hosts which names start with C(host) and
+# belong to data center C(west):
+- ovirt_hosts_facts:
+    pattern: name=host* and datacenter=west
 - debug:
-    var: ovirt_networks
+    var: ovirt_hosts
 '''
 
-
 RETURN = '''
-ovirt_networks:
-    description: "List of dictionaries describing the networks. Network attribues are mapped to dictionary keys,
-                  all networks attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/network."
+ovirt_hosts:
+    description: "List of dictionaries describing the hosts. Host attribues are mapped to dictionary keys,
+                  all hosts attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/host."
     returned: On success.
     type: list
 '''
@@ -77,13 +77,13 @@ def main():
 
     try:
         connection = create_connection(module.params.pop('auth'))
-        networks_service = connection.system_service().networks_service()
-        networks = networks_service.list(search=module.params['pattern'])
+        hosts_service = connection.system_service().hosts_service()
+        hosts = hosts_service.list(search=module.params['pattern'])
         module.exit_json(
             changed=False,
             ansible_facts=dict(
-                ovirt_networks=[
-                    get_dict_of_struct(c) for c in networks
+                ovirt_hosts=[
+                    get_dict_of_struct(c) for c in hosts
                 ],
             ),
         )

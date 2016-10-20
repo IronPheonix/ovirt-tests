@@ -26,19 +26,18 @@ except ImportError:
 
 from ansible.module_utils.ovirt import *
 
+
 DOCUMENTATION = '''
 ---
 module: ovirt_permissions_facts
 short_description: Retrieve facts about one or more oVirt permissions
+author: "Ondra Machacek (@machacekondra)"
 version_added: "2.3"
 description:
     - "Retrieve facts about one or more oVirt permissions."
 notes:
     - "This module creates a new top-level C(ovirt_permissions) fact, which
        contains a list of permissions."
-requirements:
-    - python >= 2.7
-    - ovirt-engine-sdk-python >= 4.0.0
 options:
     user_name:
         description:
@@ -62,7 +61,7 @@ EXAMPLES = '''
 # Examples don't contain auth parameter for simplicity,
 # look at ovirt_auth module to see how to reuse authentication:
 
-# Gather facts about all permissions of user john:
+# Gather facts about all permissions of user with username C(john):
 - ovirt_permissions_facts:
     user_name: john
     authz_name: example.com-authz
@@ -72,10 +71,10 @@ EXAMPLES = '''
 
 RETURN = '''
 ovirt_permissions:
-    description: "Dictionary describing the permissions. Permission attribues are mapped to dictionary keys,
+    description: "List of dictionaries describing the permissions. Permission attribues are mapped to dictionary keys,
                   all permissions attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/permission."
     returned: On success.
-    type: dictionary
+    type: list
 '''
 
 

@@ -1,9 +1,34 @@
 ---
+- name: Remove permission to group
+  ovirt_permissions:
+      state: absent
+      auth: "{{ ovirt_auth }}"
+      authz_name: "{{ aaa_authz_name }}"
+      group_name: "{{ group }}"
+      object_type: vm
+      object_name: "{{ vm1 }}"
+
+- name: Remove permission to user
+  ovirt_permissions:
+      state: absent
+      auth: "{{ ovirt_auth }}"
+      authz_name: "{{ aaa_authz_name }}"
+      user_name: "{{ user }}"
+      object_type: vm
+      object_name: "{{ vm1 }}"
+
 - name: Remove user
   ovirt_users:
     state: absent
     auth: "{{ ovirt_auth }}"
     name: "{{ user }}"
+    authz_name: "{{ aaa_authz_name }}"
+
+- name: Remove group
+  ovirt_groups:
+    state: absent
+    auth: "{{ ovirt_auth }}"
+    name: "{{ group }}"
     authz_name: "{{ aaa_authz_name }}"
 
 - name: Remove AAA files

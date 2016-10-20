@@ -39,9 +39,6 @@ description:
 notes:
     - "This module creates a new top-level C(ovirt_external_providers) fact, which
        contains a list of external_providers."
-requirements:
-    - python >= 2.7
-    - ovirt-engine-sdk-python >= 4.0.0
 options:
     type:
         description:
@@ -68,25 +65,25 @@ EXAMPLES = '''
 
 RETURN = '''
 external_host_providers:
-    description: "List of dictionary of all the external_host_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/external_host_provider.
-                  This attribute is returned in case user send 'type: foreman' parameter."
-    returned: On success if external provider is found.
+    description: "List of dictionaries of all the external_host_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/external_host_provider."
+    returned: "On success and if parameter 'type: foreman' is used."
+    type: list
 openstack_image_providers:
-    description: "List of dictionary of all the openstack_image_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_image_provider.
-                  This attribute is returned in case user send 'type: os_image' parameter."
-    returned: On success if external provider is found.
+    description: "List of dictionaries of all the openstack_image_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_image_provider."
+    returned: "On success and if parameter 'type: os_image' is used."
+    type: list
 openstack_volume_providers:
-    description: "List of dictionary of all the openstack_volume_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_volume_provider.
-                  This attribute is returned in case user send 'type: os_volume' parameter."
-    returned: On success if external provider is found.
+    description: "List of dictionaries of all the openstack_volume_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_volume_provider."
+    returned: "On success and if parameter 'type: os_volume' is used."
+    type: list
 openstack_network_providers:
-    description: "List of dictionary of all the openstack_network_provider attributes. External provider attributes can be found on your oVirt instance
-                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_network_provider.
-                  This attribute is returned in case user send 'type: os_network' parameter."
-    returned: On success if external provider is found.
+    description: "List of dictionaries of all the openstack_network_provider attributes. External provider attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/openstack_network_provider."
+    returned: "On success and if parameter 'type: os_network' is used."
+    type: list
 '''
 
 
@@ -127,6 +124,8 @@ def main():
                 e for e in external_providers_service.list()
                 if fnmatch.fnmatch(e.name, module.params['name'])
             ]
+        else:
+            external_providers = external_providers_service.list()
 
         module.exit_json(
             changed=False,

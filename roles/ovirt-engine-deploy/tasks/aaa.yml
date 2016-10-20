@@ -6,14 +6,15 @@
     mode: 0644
 
 - name: Check if config exists
-  command: ls -l /etc/ovirt-engine/extensions.d/{{ aaa_authz_name }}.properties
-  register: ls
+  stat:
+    path: /etc/ovirt-engine/extensions.d/{{ aaa_authz_name }}.properties
+  register: authz
   ignore_errors: yes
 
 - name: Configure 389ds extension
   shell: ovirt-engine-extension-aaa-ldap-setup --config-append=/tmp/aaa_answer_file.conf
   become: yes
-  when: ls.rc == 2
+  when: not authz.stat.exists
   register: aaa_configured
 
 - name: Restart ovirt engine
@@ -52,3 +53,62 @@
     auth: "{{ ovirt_auth }}"
     name: "{{ group }}"
     authz_name: "{{ aaa_authz_name }}"
+
+- name: Add permission to user
+  ovirt_permissions:
+    auth: "{{ ovirt_auth }}"
+    authz_name: "{{ aaa_authz_name }}"
+    user_name: "{{ user }}"
+    object_type: vm
+    object_name: "{{ vm0 }}"
+
+- name: Add permission to group
+  ovirt_permissions:
+    auth: "{{ ovirt_auth }}"
+    authz_name: "{{ aaa_authz_name }}"
+    group_name: "{{ group }}"
+    object_type: vm
+    object_name: "{{ vm0 }}"
+    role: SuperUser
+
+- name: Login to oVirt as user from external LDAP
+  ovirt_auth:
+    url: https://{{ ovirt_engine_hostname }}/ovirt-engine/api
+    username: "{{ user }}@{{ aaa_profile_name }}"
+    ca_file: /etc/pki/ovirt-engine/ca.pem
+    password: "{{ ovirt_engine_passsword }}"
+
+- name: Fetch all clusters which user can see
+  ovirt_clusters_facts:
+    auth: "{{ ovirt_auth }}"
+
+- name: Logout external LDAP user
+  ovirt_auth:
+    state: absent
+    ovirt_auth: "{{ ovirt_auth }}"
+
+- name: Login to oVirt
+  ovirt_auth:
+    url: https://{{ ovirt_engine_hostname }}/ovirt-engine/api
+    username: admin@internal
+    ca_file: /etc/pki/ovirt-engine/ca.pem
+    password: "{{ ovirt_engine_passsword }}"
+
+- name: List permissions
+  ovirt_permissions_facts:
+    auth: "{{ ovirt_auth }}"
+    user_name: "{{ user }}"
+    authz_name: "{{ aaa_authz_name }}"
+
+- name: debug perms
+  debug:
+    var: ovirt_permissions
+
+# ----- Negative tests -----
+- name: Run permissions negative tests
+  include: permissions_negative.yml
+  when: negative
+
+- name: Run user/groups negative tests
+  include: users_groups_negative.yml
+  when: negative

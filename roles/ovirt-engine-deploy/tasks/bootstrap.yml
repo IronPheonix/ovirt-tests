@@ -8,8 +8,6 @@
     local: false
     compatibility_version: "{{ compatibility_version }}"
 
-# TODO: add_dc_quota
-
 - name: Add cluster
   ovirt_clusters:
     auth: "{{ ovirt_auth }}"
@@ -17,7 +15,44 @@
     name: "{{ cluster }}"
     cpu_type: "{{ cpu_type }}"
     compatibility_version: "{{ compatibility_version }}"
-    datacenter_name: "{{ datacenter }}"
+    datacenter: "{{ datacenter }}"
+
+# fatal: [engine]: FAILED! => {"changed": false, "failed": true, "msg": "Fault reason is \"Operation Failed\".
+# Fault detail is \"[Cannot edit Quota. Limitation can not be configured as specific and general for the same Quota.
+# Please choose whether the limitation should be enforced on the Data Center (global) or for specific storage domain or cluster.]\".
+# HTTP response code is 409."}
+- name: Add DC quota
+  ovirt_quotas:
+    auth: "{{ ovirt_auth }}"
+    state: present
+    name: "quota1"
+    datacenter: "{{ datacenter }}"
+    storage_grace: 40
+    storage_threshold: 60
+    cluster_grace: 30
+    cluster_threshold: 70
+    clusters:
+      - memory: 10
+        cpu: 6
+    storages:
+      - name: "{{ data_name }}"
+        size: 100
+
+- name: fetch quota
+  ovirt_quotas_facts:
+    auth: "{{ ovirt_auth }}"
+    datacenter: "{{ datacenter }}"
+
+- name: print
+  debug:
+    var: ovirt_quotas
+
+- name: del quota
+  ovirt_quotas:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "quota1"
+    datacenter: "{{ datacenter }}"
 
 - name: Add host to oVirt engine
   ovirt_hosts:
@@ -42,7 +77,15 @@
   retries: 30
   delay: 7
 
-# TODO: install_cockpit_ovirt
+#- name: Install dashboard package
+#  yum:
+#    name: cockpit-ovirt-dashboard
+#    state: present
+#  delegate_to: "{{ item }}"
+#  with_items:
+#    - host1
+#    - host2
+#  ignore_errors: yes
 
 - name: Add NFS storage
   ovirt_storage_domains:
@@ -54,11 +97,21 @@
       address: 192.168.200.13
       path: /exports/nfs_clean/share1
 
+- name: list
+  ovirt_storage_domains_facts:
+    auth: "{{ ovirt_auth }}"
+    pattern: "name=d* and datacenter=test*"
+
+- name: p
+  debug:
+    var: ovirt_storage_domains
+
 - name: Get lun id
   shell: multipath -ll -v1 |sort |head -n1
   delegate_to: storage
   become: yes
   register: lun_id
+  changed_when: lun_id is undefined
 
 - name: Add iSCSI storage
   ovirt_storage_domains:
@@ -112,11 +165,7 @@
   until: job_result.finished
   retries: 30
   delay: 5
-#
 
-# TODO: import_templates
-# TODO: generic_import_from_glance
-# TODO: list_glance_images
 # TODO: import_non_template_from_glance
 
 - name: Import template from glance
@@ -126,17 +175,29 @@
     name: "{{ template }}"
     image_provider:  "{{ image_provider }}"
     image_disk: "{{ cirros_image }}"
+    #export_domain: "{{ export_name }}"
     storage_domain: "{{ data_name }}"
     cluster: "{{ cluster }}"
 
-# TODO: set_dc_quota_audit
-# TODO: add_quota_storage_limits
-# TODO: add_quota_cluster_limits
+- name: templates
+  ovirt_templates_facts:
+    auth: "{{ ovirt_auth }}"
+    pattern: name=c*
+  
+- name: p
+  debug:
+    var: ovirt_templates
+
+- name: Update quota mode of dacenter
+  ovirt_datacenters:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ datacenter }}"
+    quota_mode: audit
 
 - name: Add VM network
   ovirt_networks:
     auth: "{{ ovirt_auth }}"
-    datacenter_name: "{{ datacenter }}"
+    datacenter: "{{ datacenter }}"
     name: "{{ vlan_100 }}"
     vlan_tag: 100
     vm_network: true
@@ -145,9 +206,9 @@
 - name: Add non VM network
   ovirt_networks:
     auth: "{{ ovirt_auth }}"
-    datacenter_name: "{{ datacenter }}"
+    datacenter: "{{ datacenter }}"
     name: "{{ vlan_200 }}"
     vlan_tag: 200
     vm_network: false
     description: Non VM Network on VLAN 200, MTU 9000
-    # TODO: MTU
+    mtu: 9000

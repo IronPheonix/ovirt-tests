@@ -9,6 +9,12 @@
     - "{{ vm0 }}"
     - "{{ vm1 }}"
 
+- name: Delete VM pool
+  ovirt_vmpools:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "{{ vmpool }}"
+
 - name: Remove template
   ovirt_templates:
     auth: "{{ ovirt_auth }}"

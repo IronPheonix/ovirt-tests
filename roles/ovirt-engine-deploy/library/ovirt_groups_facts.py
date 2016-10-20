@@ -26,19 +26,18 @@ except ImportError:
 
 from ansible.module_utils.ovirt import *
 
+
 DOCUMENTATION = '''
 ---
 module: ovirt_groups_facts
 short_description: Retrieve facts about one or more oVirt groups
+author: "Ondra Machacek (@machacekondra)"
 version_added: "2.3"
 description:
     - "Retrieve facts about one or more oVirt groups."
 notes:
     - "This module creates a new top-level C(ovirt_groups) fact, which
        contains a list of groups."
-requirements:
-    - python >= 2.7
-    - ovirt-engine-sdk-python >= 4.0.0
 options:
     pattern:
       description:
@@ -51,7 +50,7 @@ EXAMPLES = '''
 # Examples don't contain auth parameter for simplicity,
 # look at ovirt_auth module to see how to reuse authentication:
 
-# Gather facts about all groups stars on string C<admin*>:
+# Gather facts about all groups which names start with C(admin):
 - ovirt_groups_facts:
     pattern: name=admin*
 - debug:
@@ -60,10 +59,10 @@ EXAMPLES = '''
 
 RETURN = '''
 ovirt_groups:
-    description: "Dictionary describing the groups. Group attribues are mapped to dictionary keys,
+    description: "List of dictionaries describing the groups. Group attribues are mapped to dictionary keys,
                   all groups attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/group."
     returned: On success.
-    type: dictionary
+    type: list
 '''
 
 

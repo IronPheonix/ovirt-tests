@@ -26,19 +26,18 @@ except ImportError:
 
 from ansible.module_utils.ovirt import *
 
+
 DOCUMENTATION = '''
 ---
 module: ovirt_clusters_facts
 short_description: Retrieve facts about one or more oVirt clusters
+author: "Ondra Machacek (@machacekondra)"
 version_added: "2.3"
 description:
     - "Retrieve facts about one or more oVirt clusters."
 notes:
     - "This module creates a new top-level C(ovirt_clusters) fact, which
        contains a list of clusters."
-requirements:
-    - python >= 2.7
-    - ovirt-engine-sdk-python >= 4.0.0
 options:
     pattern:
       description:
@@ -52,7 +51,7 @@ EXAMPLES = '''
 # Examples don't contain auth parameter for simplicity,
 # look at ovirt_auth module to see how to reuse authentication:
 
-# Gather facts about all clusters named C<production*>:
+# Gather facts about all clusters which names start with C<production>:
 - ovirt_clusters_facts:
     pattern: name=production*
 - debug:
@@ -61,10 +60,10 @@ EXAMPLES = '''
 
 RETURN = '''
 ovirt_clusters:
-    description: "Dictionary describing the clusters. Cluster attribues are mapped to dictionary keys,
+    description: "List of dictionaries describing the clusters. Cluster attribues are mapped to dictionary keys,
                   all clusters attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/cluster."
     returned: On success.
-    type: dictionary
+    type: list
 '''
 
 
