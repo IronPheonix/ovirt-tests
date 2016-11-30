@@ -19,12 +19,21 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import traceback
+
 try:
     import ovirtsdk4 as sdk
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    check_sdk,
+    create_connection,
+    get_link_name,
+    ovirt_full_argument_spec,
+    search_by_name,
+)
 
 
 DOCUMENTATION = '''
@@ -112,14 +121,16 @@ def main():
                 if value and isinstance(value, sdk.Struct):
                     newperm[key[1:]] = get_link_name(connection, value)
             permissions.append(newperm)
-        
+
         module.exit_json(
             changed=False,
             ansible_facts=dict(ovirt_permissions=permissions),
         )
     except Exception as e:
-        module.fail_json(msg=str(e))
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
+    finally:
+        connection.close(logout=False)
 
-from ansible.module_utils.basic import *
+
 if __name__ == '__main__':
     main()

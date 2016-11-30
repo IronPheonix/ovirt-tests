@@ -19,13 +19,22 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import traceback
+
 try:
-    import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    BaseModule,
+    check_params,
+    check_sdk,
+    create_connection,
+    equal,
+    ovirt_full_argument_spec,
+)
 
 
 DOCUMENTATION = '''
@@ -95,6 +104,14 @@ EXAMPLES = '''
     tenant: admin
     auth_url: http://10.34.63.71:35357/v2.0/
 
+# Add foreman provider:
+- ovirt_external_providers:
+    name: foreman_provider
+    type: foreman
+    url: https://foreman.example.com
+    username: admin
+    password: 123456
+
 # Remove image external provider:
 - ovirt_external_providers:
     state: absent
@@ -151,7 +168,7 @@ class ExternalProviderModule(BaseModule):
             equal(self._module.params.get('description'), entity.description) and
             equal(self._module.params.get('url'), entity.url) and
             equal(self._module.params.get('authentication_url'), entity.authentication_url) and
-            equal(self._module.params.get('tenant_name'), entity.tenant_name) and
+            equal(self._module.params.get('tenant_name'), getattr(entity, 'tenant_name', None)) and
             equal(self._module.params.get('username'), entity.username)
         )
 
@@ -218,11 +235,10 @@ def main():
 
         module.exit_json(**ret)
     except Exception as e:
-        module.fail_json(msg=str(e))
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
     finally:
         connection.close(logout=False)
 
 
-from ansible.module_utils.basic import *
 if __name__ == "__main__":
     main()

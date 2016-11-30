@@ -45,7 +45,7 @@ options:
         required: true
     state:
         description:
-            - "Should the host be present/absent/maintenance/upgraded"
+            - "State which should a host to be in after successful completion."
         choices: ['present', 'absent', 'maintenance', 'upgraded', 'started', 'restarted', 'stopped']
         default: present
     comment:

@@ -57,7 +57,9 @@ options:
         default: 'present'
     size:
         description:
-            - "Size of the disk. Size should be specified using IEC standard units. For example 10GiB, 1024MiB, etc."
+            - "Size of the disk. Size should be specified using IEC standard units.
+              For example 10GiB, 1024MiB, etc."
+            - "Size can be only increased, not decreased."
     interface:
         description:
             - "Driver of the storage interface."
@@ -144,7 +146,6 @@ disk_attachment:
 '''
 
 
-
 def _search_by_lun(disks_service, lun_id):
     """
     Find disk by LUN ID.
@@ -155,6 +156,22 @@ def _search_by_lun(disks_service, lun_id):
         )
     ]
     return res[0] if res else None
+
+
+def update_storage_domains(disk_id, disks_module):
+    disk = disks_module._service.service(disk_id).get()
+    storages = disks_module.param('storage_domain')
+    if not isinstance(storages, list):
+        storages = [storages]
+
+    sds_service = disks_module._connection.system_service().storage_domains_service()
+    sds_ids = [
+        getattr(search_by_name(sds_service, storage), 'id', None)
+        for storage in storages
+    ]
+
+    if sorted(sds_ids):
+        pass
 
 
 class DisksModule(BaseModule):
@@ -194,7 +211,7 @@ class DisksModule(BaseModule):
             ) if logical_unit else None,
         )
 
-    def update_check(self, entity):
+    def _update_check(self, entity):
         return (
             equal(self._module.params.get('description'), entity.description) and
             equal(convert_to_bytes(self._module.params.get('size')), entity.provisioned_size) and
@@ -217,6 +234,7 @@ class DiskAttachmentsModule(DisksModule):
 
     def update_check(self, entity):
         return (
+            super(DiskAttachmentsModule, self)._update_check(follow_link(self._connection, entity.disk)) and
             equal(self._module.params.get('interface'), str(entity.interface)) and
             equal(self._module.params.get('bootable'), entity.bootable)
         )
@@ -271,6 +289,7 @@ def main():
                 entity=disk,
                 result_state=otypes.DiskStatus.OK if lun is None else None,
             )
+            update_storage_domains(ret['id'], disks_module)
             # We need to pass ID to the module, so in case we want detach/attach disk
             # we have this ID specified to attach/detach method:
             module.params['id'] = ret['id'] if disk is None else disk.id
@@ -278,7 +297,7 @@ def main():
             ret = disks_module.remove()
 
         # If VM was passed attach/detach disks to/from the VM:
-        if 'vm_id' in module.params or 'vm_name' in module.params and state != 'absent':
+        if module.params['vm_id'] or module.params['vm_name'] and state != 'absent':
             vms_service = connection.system_service().vms_service()
 
             # If `vm_id` isn't specified, find VM by name:
@@ -301,6 +320,12 @@ def main():
 
             if state == 'present' or state == 'attached':
                 ret = disk_attachments_module.create()
+                wait(
+                    service=disk_attachments_service.service(ret['id']),
+                    condition=lambda d: follow_link(connection, d.disk).status == otypes.DiskStatus.OK,
+                    wait=module.params['wait'],
+                    timeout=module.params['timeout'],
+                )
             elif state == 'detached':
                 ret = disk_attachments_module.remove()
 

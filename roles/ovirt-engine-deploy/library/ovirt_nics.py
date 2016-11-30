@@ -20,12 +20,22 @@
 #
 
 try:
-    import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+import traceback
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    BaseModule,
+    check_sdk,
+    create_connection,
+    equal,
+    get_link_name,
+    ovirt_full_argument_spec,
+    search_by_name,
+)
 
 
 DOCUMENTATION = '''
@@ -116,6 +126,10 @@ nic:
 
 class VmNicsModule(BaseModule):
 
+    def __init__(self, *args, **kwargs):
+        super(VmNicsModule, self).__init__(*args, **kwargs)
+        self.vnic_id = None
+
     @property
     def vnic_id(self):
         return self._vnic_id
@@ -178,7 +192,7 @@ def main():
             raise Exception("VM '%s' was not found." % vm_name)
 
         # Locate the service that manages the virtual machines NICs:
-        vm_service = vms_service.vm_service(vm.id) 
+        vm_service = vms_service.vm_service(vm.id)
         nics_service = vm_service.nics_service()
         vmnics_module = VmNicsModule(
             connection=connection,
@@ -221,10 +235,9 @@ def main():
 
         module.exit_json(**ret)
     except Exception as e:
-        module.fail_json(msg=str(e))
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
     finally:
         connection.close(logout=False)
 
-from ansible.module_utils.basic import *
 if __name__ == "__main__":
     main()

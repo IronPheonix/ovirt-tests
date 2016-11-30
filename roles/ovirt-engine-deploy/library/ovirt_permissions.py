@@ -20,12 +20,24 @@
 #
 
 try:
-    import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+import traceback
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    BaseModule,
+    check_sdk,
+    create_connection,
+    equal,
+    follow_link,
+    get_link_name,
+    ovirt_full_argument_spec,
+    search_by_attributes,
+    search_by_name,
+)
 
 
 DOCUMENTATION = '''
@@ -161,7 +173,7 @@ def _permission(module, permissions_service, connection):
 class PermissionsModule(BaseModule):
 
     def _user(self):
-        user =  search_by_attributes(
+        user = search_by_attributes(
             self._connection.system_service().users_service(),
             usrname="{name}@{authz_name}".format(
                 name=self._module.params['user_name'],
@@ -171,7 +183,7 @@ class PermissionsModule(BaseModule):
         if user is None:
             raise Exception("User '%s' was not found." % self._module.params['user_name'])
         return user
-    
+
     def _group(self):
         groups = self._connection.system_service().groups_service().list(
             search="name={name}".format(
@@ -266,10 +278,10 @@ def main():
 
         module.exit_json(**ret)
     except Exception as e:
-        module.fail_json(msg=str(e))
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
     finally:
         connection.close(logout=False)
 
-from ansible.module_utils.basic import *
+
 if __name__ == "__main__":
     main()

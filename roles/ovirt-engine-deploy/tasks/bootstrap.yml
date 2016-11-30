@@ -37,22 +37,7 @@
     storages:
       - name: "{{ data_name }}"
         size: 100
-
-- name: fetch quota
-  ovirt_quotas_facts:
-    auth: "{{ ovirt_auth }}"
-    datacenter: "{{ datacenter }}"
-
-- name: print
-  debug:
-    var: ovirt_quotas
-
-- name: del quota
-  ovirt_quotas:
-    auth: "{{ ovirt_auth }}"
-    state: absent
-    name: "quota1"
-    datacenter: "{{ datacenter }}"
+  ignore_errors: true
 
 - name: Add host to oVirt engine
   ovirt_hosts:
@@ -96,15 +81,6 @@
     nfs:
       address: 192.168.200.13
       path: /exports/nfs_clean/share1
-
-- name: list
-  ovirt_storage_domains_facts:
-    auth: "{{ ovirt_auth }}"
-    pattern: "name=d* and datacenter=test*"
-
-- name: p
-  debug:
-    var: ovirt_storage_domains
 
 - name: Get lun id
   shell: multipath -ll -v1 |sort |head -n1
@@ -178,15 +154,6 @@
     #export_domain: "{{ export_name }}"
     storage_domain: "{{ data_name }}"
     cluster: "{{ cluster }}"
-
-- name: templates
-  ovirt_templates_facts:
-    auth: "{{ ovirt_auth }}"
-    pattern: name=c*
-  
-- name: p
-  debug:
-    var: ovirt_templates
 
 - name: Update quota mode of dacenter
   ovirt_datacenters:

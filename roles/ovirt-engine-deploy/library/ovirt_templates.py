@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/pythonapi/
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016 Red Hat, Inc.
@@ -20,14 +20,25 @@
 #
 
 import time
+import traceback
 
 try:
-    import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    BaseModule,
+    check_sdk,
+    create_connection,
+    equal,
+    get_dict_of_struct,
+    get_link_name,
+    ovirt_full_argument_spec,
+    search_by_attributes,
+    search_by_name,
+)
 
 
 DOCUMENTATION = '''
@@ -48,7 +59,7 @@ options:
             - "Should the template be present/absent/exported/imported"
         choices: ['present', 'absent', 'exported', 'imported']
         default: present
-    vm_name:
+    vm:
         description:
             - "Name of the VM, which will be used to create template."
     description:
@@ -95,7 +106,7 @@ EXAMPLES = '''
 - ovirt_templates:
     cluster: Default
     name: mytemplate
-    vm_name: rhel7
+    vm: rhel7
     cpu_profile: Default
     description: Test
 
@@ -135,8 +146,8 @@ class TemplatesModule(BaseModule):
                 name=self._module.params['cluster']
             ) if self._module.params['cluster'] else None,
             vm=otypes.Vm(
-                name=self._module.params['vm_name']
-            ) if self._module.params['vm_name'] else None,
+                name=self._module.params['vm']
+            ) if self._module.params['vm'] else None,
             description=self._module.params['description'],
             cpu_profile=otypes.CpuProfile(
                 id=search_by_name(
@@ -190,7 +201,7 @@ def main():
             default='present',
         ),
         name=dict(default=None, required=True),
-        vm_name=dict(default=None),
+        vm=dict(default=None),
         description=dict(default=None),
         cluster=dict(default=None),
         cpu_profile=dict(default=None),
@@ -257,7 +268,7 @@ def main():
                         ),
                         import_as_template=True,
                     )
-                
+
                 if module.params['image_disk']:
                     # We need to refresh storage domain to get list of images:
                     templates_module._get_export_domain_service().images_service().list()
@@ -267,7 +278,7 @@ def main():
                     images_service = glance_service.service(image_provider.id).images_service()
                 else:
                     images_service = templates_module._get_export_domain_service().templates_service()
-                template_name = module.params['image_disk'] or module.params['name'] 
+                template_name = module.params['image_disk'] or module.params['name']
                 entity = search_by_name(images_service, template_name)
                 if entity is None:
                     raise Exception("Image/template '%s' was not found." % template_name)
@@ -290,10 +301,10 @@ def main():
 
         module.exit_json(**ret)
     except Exception as e:
-        module.fail_json(msg=str(e))
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
     finally:
         connection.close(logout=False)
 
-from ansible.module_utils.basic import *
+
 if __name__ == "__main__":
     main()

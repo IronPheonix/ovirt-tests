@@ -20,14 +20,23 @@
 #
 
 try:
-    import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
 
     from ovirtsdk4.types import StorageDomainStatus as sdstate
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+import traceback
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    BaseModule,
+    check_sdk,
+    create_connection,
+    ovirt_full_argument_spec,
+    search_by_name,
+    wait,
+)
 
 
 DOCUMENTATION = '''
@@ -44,8 +53,8 @@ options:
             - "Name of the the storage domain to manage."
     state:
         description:
-            - "Should the storage domain be present/absent/maintenance"
-        choices: ['present', 'absent', 'maintenance']
+            - "Should the storage domain be present/absent/maintenance/unattached"
+        choices: ['present', 'absent', 'maintenance', 'unattached']
         default: present
     description:
         description:
@@ -321,7 +330,6 @@ def control_state(sd_module):
     sd = sd_module.search_entity()
     if sd is None:
         return
-    state = sd_module._module.params['state']
 
     sd_service = sd_module._service.service(sd.id)
     if sd.status == sdstate.LOCKED:
@@ -356,7 +364,7 @@ def control_state(sd_module):
 def main():
     argument_spec = ovirt_full_argument_spec(
         state=dict(
-            choices=['present', 'absent', 'maintenance'],
+            choices=['present', 'absent', 'maintenance', 'unattached'],
             default='present',
         ),
         name=dict(required=True),
@@ -414,14 +422,19 @@ def main():
                 wait_condition=lambda s: s.status == sdstate.MAINTENANCE,
                 fail_condition=failed_state,
             )
+        elif state == 'unattached':
+            ret = storage_domains_module.create()
+            storage_domains_module.pre_remove(
+                storage_domain=storage_domains_service.service(ret['id']).get()
+            )
+            ret['changed'] = storage_domains_module.changed
 
         module.exit_json(**ret)
     except Exception as e:
-        module.fail_json(msg=str(e))
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
     finally:
         connection.close(logout=False)
 
 
-from ansible.module_utils.basic import *
 if __name__ == "__main__":
     main()

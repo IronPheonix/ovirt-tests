@@ -20,12 +20,22 @@
 #
 
 try:
-    import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+import traceback
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    BaseModule,
+    check_sdk,
+    create_connection,
+    equal,
+    get_link_name,
+    ovirt_full_argument_spec,
+    search_by_name,
+)
 
 
 DOCUMENTATION = '''
@@ -70,14 +80,14 @@ options:
             - "List of dictionary of cluster limits, which is valid to specific cluster."
             - "If cluster isn't spefied it's valid to all clusters in system:"
             - "C(cluster) - Name of the cluster."
-            - "C(memory) - Memory limit."
+            - "C(memory) - Memory limit (in GiB)."
             - "C(cpu) - CPU limit."
     storages:
         description:
             - "List of dictionary of storage limits, which is valid to specific storage."
             - "If storage isn't spefied it's valid to all storages in system:"
             - "C(storage) - Name of the storage."
-            - "C(size) - Size limit."
+            - "C(size) - Size limit (in GiB)."
 extends_documentation_fragment: ovirt
 '''
 
@@ -91,7 +101,7 @@ ovirt_quotas:
     datacenter: dcX
     clusters:
         - name: cluster1
-          memory: 20GiB
+          memory: 20
           cpu: 10
 
 # Add cluster quota to all clusters with memory limit 30GiB and CPU limit to 15:
@@ -99,7 +109,7 @@ ovirt_quotas:
     name: quota2
     datacenter: dcX
     clusters:
-        - memory: 30GiB
+        - memory: 30
           cpu: 15
 
 # Add storage quota to storage data1 with size limit to 100GiB
@@ -110,7 +120,7 @@ ovirt_quotas:
     storage_threshold: 60
     storages:
         - name: data1
-          size: 100GiB
+          size: 100
 
 # Remove quota quota1 (Note the quota must not be assigned to any VM/disk):
 ovirt_quotas:
@@ -144,8 +154,56 @@ class QuotasModule(BaseModule):
             cluster_soft_limit_pct=self._module.params.get('cluster_threshold'),
         )
 
+    def update_storage_limits(self, entity):
+        new_limits = {}
+        for storage in self._module.params.get('storages'):
+            new_limits[storage.get('name', '')] = {
+                'size': storage.get('size'),
+            }
+
+        old_limits = {}
+        sd_limit_service = self._service.service(entity.id).quota_storage_limits_service()
+        for limit in sd_limit_service.list():
+            storage = get_link_name(self._connection, limit.storage_domain) if limit.storage_domain else ''
+            old_limits[storage] = {
+                'size': limit.limit,
+            }
+            sd_limit_service.service(limit.id).remove()
+
+        return new_limits == old_limits
+
+    def update_cluster_limits(self, entity):
+        new_limits = {}
+        for cluster in self._module.params.get('clusters'):
+            new_limits[cluster.get('name', '')] = {
+                'cpu': cluster.get('cpu'),
+                'memory': float(cluster.get('memory')),
+            }
+
+        old_limits = {}
+        cl_limit_service = self._service.service(entity.id).quota_cluster_limits_service()
+        for limit in cl_limit_service.list():
+            cluster = get_link_name(self._connection, limit.cluster) if limit.cluster else ''
+            old_limits[cluster] = {
+                'cpu': limit.vcpu_limit,
+                'memory': limit.memory_limit,
+            }
+            cl_limit_service.service(limit.id).remove()
+
+        return new_limits == old_limits
+
     def update_check(self, entity):
+        # -- FIXME --
+        # Note that we here always remove all cluster/storage limits, because
+        # it's not currently possible to update them and then re-create the limits
+        # appropriatelly, this shouldn't have any side-effects, but it's not considered
+        # as a correct approach.
+        # This feature is tracked here: https://bugzilla.redhat.com/show_bug.cgi?id=1398576
+        #
+
         return (
+            self.update_storage_limits(entity) and
+            self.update_cluster_limits(entity) and
             equal(self._module.params.get('description'), entity.description) and
             equal(self._module.params.get('storage_grace'), entity.storage_hard_limit_pct) and
             equal(self._module.params.get('storage_threshold'), entity.storage_soft_limit_pct) and
@@ -227,10 +285,10 @@ def main():
 
         module.exit_json(**ret)
     except Exception as e:
-        module.fail_json(msg=str(e))
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
     finally:
         connection.close(logout=False)
 
-from ansible.module_utils.basic import *
+
 if __name__ == "__main__":
     main()

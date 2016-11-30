@@ -7,5 +7,4 @@
     ovirt_engine_hostname: ovirt.local
 
   roles:
-    - { role: ovirt-engine-setup, tags: ['setup'] }
-    - { role: ovirt-engine-deploy, tags: ['deploy'] }
+    - ovirt-engine-destroy
