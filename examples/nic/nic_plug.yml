@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Plug NIC
+    ovirt_nics:
+      auth: "{{ ovirt_auth }}"
+      state: plugged
+      vm_name: rhel7
+      name: nic1

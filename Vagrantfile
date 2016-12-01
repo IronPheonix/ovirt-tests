@@ -19,18 +19,6 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  #config.vm.define "nfs" do |nfs|
-  #  nfs.vm.hostname = "nfs.local"
-  #  nfs.vm.network "private_network", ip: "192.168.200.13"
-
-  #  nfs.vm.provision "shell", path: "nfs.sh"
-
-  #  nfs.vm.provider "libvirt" do |libvirt|
-  #    libvirt.storage :file, :size => '20G'
-  #    libvirt.storage :file, :size => '20G'
-  #  end
-  #end
-
   config.vm.define "storage" do |storage|
     storage.vm.hostname = "storage.local"
     storage.vm.network "private_network", ip: "192.168.200.13"

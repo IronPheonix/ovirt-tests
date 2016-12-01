@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Add SD
+    ovirt_storage_domains:
+      auth: "{{ ovirt_auth }}"
+      name: data3
+      host: myhost1
+      data_center: mydatacenter
+      nfs:
+        address: 192.168.1.1
+        path: /om02

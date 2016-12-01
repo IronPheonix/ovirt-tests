@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Delete vmpool
+    ovirt_vmpools:
+      state: absent
+      auth: "{{ ovirt_auth }}"
+      name: myvmpool

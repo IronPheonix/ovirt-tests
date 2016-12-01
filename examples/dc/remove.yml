@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Remove datacenter
+    ovirt_datacenters:
+      auth: "{{ ovirt_auth }}"
+      state: absent
+      name: mydatacenter2

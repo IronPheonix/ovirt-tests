@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Remove host
+    ovirt_hosts:
+      auth: "{{ ovirt_auth }}"
+      state: absent
+      name: myhost2
+      force: True

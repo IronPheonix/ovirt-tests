@@ -180,13 +180,6 @@ def _search_by_lun(disks_service, lun_id):
     return res[0] if res else None
 
 
-def merge_dicts(d1, d2):
-    d1['changed']
-    tmp = d1.copy()
-    tmp.update(d2)
-    return tmp
-
-
 class DisksModule(BaseModule):
 
     def build_entity(self):
@@ -198,7 +191,7 @@ class DisksModule(BaseModule):
             format=otypes.DiskFormat(
                 self._module.params.get('format')
             ) if self._module.params.get('format') else None,
-            sparse=self._module.params.get('format').lower() != 'raw',
+            sparse=self._module.params.get('format') != 'raw',
             provisioned_size=convert_to_bytes(
                 self._module.params.get('size')
             ),
@@ -367,12 +360,13 @@ def main():
 
             if state == 'present' or state == 'attached':
                 ret = disk_attachments_module.create()
-                wait(
-                    service=disk_attachments_service.service(ret['id']),
-                    condition=lambda d: follow_link(connection, d.disk).status == otypes.DiskStatus.OK,
-                    wait=module.params['wait'],
-                    timeout=module.params['timeout'],
-                )
+                if lun is None:
+                    wait(
+                        service=disk_attachments_service.service(ret['id']),
+                        condition=lambda d:follow_link(connection, d.disk).status == otypes.DiskStatus.OK,
+                        wait=module.params['wait'],
+                        timeout=module.params['timeout'],
+                    )
             elif state == 'detached':
                 ret = disk_attachments_module.remove()
 

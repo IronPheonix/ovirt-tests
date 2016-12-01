@@ -441,6 +441,8 @@ class ClustersModule(BaseModule):
         )
 
     def update_check(self, entity):
+        serial_number = entity.serial_number
+        sched_policy = self._get_sched_policy()
         return (
             equal(self.param('comment'), entity.comment) and
             equal(self.param('description'), entity.description) and
@@ -466,10 +468,10 @@ class ClustersModule(BaseModule):
             equal(self.param('migration_bandwidth'), str(entity.migration.bandwidth.assignment_method)) and
             equal(self.param('migration_auto_converge'), str(entity.migration.auto_converge)) and
             equal(self.param('migration_compressed'), str(entity.migration.compressed)) and
-            equal(self.param('serial_policy'), str(entity.serial_number.policy)) and
-            equal(self.param('serial_policy_value'), entity.serial_number.value) and
-            equal(self.param('scheduling_policy'), self._get_sched_policy().name) and
-            equal(self._get_policy_id(), entity.migration.policy.id) and
+            equal(self.param('serial_policy'), str(serial_number.policy) if serial_number else None) and
+            equal(self.param('serial_policy_value'), getattr(serial_number, 'value', None)) and
+            equal(self.param('scheduling_policy'), getattr(sched_policy, 'name', None)) and
+            equal(self._get_policy_id(), getattr(entity.migration.policy, 'id', None)) and
             equal(self._get_memory_policy(), entity.memory_policy.over_commit.percent) and
             equal(self.__get_minor(self.param('compatibility_version')), self.__get_minor(entity.version)) and
             equal(self.__get_major(self.param('compatibility_version')), self.__get_major(entity.version)) and

@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Add NIC 2
+    ovirt_nics:
+      auth: "{{ ovirt_auth }}"
+      state: plugged
+      vm: myvm
+      name: mynic2
+      mac_address: 00:1a:4a:16:01:55

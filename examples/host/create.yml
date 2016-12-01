@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create host
+    ovirt_hosts:
+      auth: "{{ ovirt_auth }}"
+      cluster: Default
+      name: myhost1
+      address: 192.168.1.1
+      password: 123456

@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create vm from template
+    ovirt_vms:
+      auth: "{{ ovirt_auth }}"
+      name: rhel7
+      cd_iso: 'CentOS-7-x86_64-DVD-1511.iso'

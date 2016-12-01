@@ -1,0 +1,24 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Attach LUN to VM
+    ovirt_disks:
+      auth: "{{ ovirt_auth }}"
+      vm_name: rhel7
+      disk_name: 'cinder_disk'
+      disk_storage_domain: 'mycinder'
+      disk_interface: 'virtio'
+      disk_provisioned_size: 1GiB
+      disk_format: cow
+      disk_storage_type: cinder

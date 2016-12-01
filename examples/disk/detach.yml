@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Remove disk
+    ovirt_disks:
+      state: detached
+      auth: "{{ ovirt_auth }}"
+      disk_name: myvm_disk
+      vm_name: rhel7

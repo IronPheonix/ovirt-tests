@@ -26,6 +26,7 @@
   delegate_to: storage
   become: yes
   register: lun_id
+  changed_when: false
 
 - name: Add LUN to VM
   ovirt_disks:
@@ -51,15 +52,6 @@
     cpu_cores: 1
     cpu_sockets: 1
     # TODO: display, serial_number, timezone
-
-- name: vm
-  ovirt_vms_facts:
-    auth: "{{ ovirt_auth }}"
-    pattern: "name=m* and cluster=t*"
-
-- name: d
-  debug:
-    var: ovirt_vms
 
 - name: Migrate VM
   ovirt_vms:
@@ -87,16 +79,6 @@
     interface: e1000
     profile: ovirtmgmt
     network: ovirtmgmt
-
-- name: nics
-  ovirt_nics_facts:
-    auth: "{{ ovirt_auth }}"
-    vm: "{{ vm1 }}"
-    name: a*
-
-- name: nics
-  debug:
-    var: ovirt_nics
 
 - name: Hotplug disk to VM
   ovirt_disks:

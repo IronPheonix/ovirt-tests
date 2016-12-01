@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: List perms
+    ovirt_permissions_facts:
+      auth: "{{ ovirt_auth }}"
+      user_name: admin
+      authz_name: internal-authz
+
+  - name: Print
+    debug:
+      var: ovirt_permissions

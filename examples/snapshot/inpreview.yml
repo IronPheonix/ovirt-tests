@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create snapshot of the VM
+    ovirt_snapshots:
+      auth: "{{ ovirt_auth }}"
+      state: inpreview
+      vm_name: rhel7
+      snapshot_id: 91e02357-c8a2-45de-8955-82ddb6023fc6

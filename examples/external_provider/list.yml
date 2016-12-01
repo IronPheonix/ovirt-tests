@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create foreman
+    ovirt_external_providers_facts:
+      auth: "{{ ovirt_auth }}"
+      name: sat
+      type: foreman
+
+  - name: Print
+    debug:
+      var: ovirt_external_providers

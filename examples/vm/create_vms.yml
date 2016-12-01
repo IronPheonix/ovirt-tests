@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create vm from template
+    ovirt_vms:
+      auth: "{{ ovirt_auth }}"
+      cluster: Default
+      template: rhel7
+      name: "{{ item }}"
+    with_items:
+      - "rh7_1"
+      - "rh7_2"
+      - "rh7_3"
+      - "rh7_4"
+      - "rh7_5"

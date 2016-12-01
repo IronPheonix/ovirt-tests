@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: List vms
+    ovirt_vms_facts:
+      auth: "{{ ovirt_auth }}"
+ 
+  - name: Print vms
+    debug:
+      var: ovirt_vms

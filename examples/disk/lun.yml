@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Attach LUN to VM
+    ovirt_disks:
+      auth: "{{ ovirt_auth }}"
+      state: attached
+      #state: present
+      name: my_lun_disk
+      vm_name: rhel7_2
+      logical_unit:
+        target: iqn.2016-08-09.brq.str-01:omachace
+        id: 1IET_000d0001
+        address: 10.34.63.204
+      interface: 'virtio'

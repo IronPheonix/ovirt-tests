@@ -1,0 +1,40 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create vm from template
+    ovirt_vms:
+      auth: "{{ ovirt_auth }}"
+      state: absent
+      name: rhel7_4
+
+  - name: Create vm from template
+    ovirt_vms:
+      auth: "{{ ovirt_auth }}"
+      name: rhel7_4
+      template: rhel7
+      cluster: mycluster
+      cloud_init:
+        host_name: mycomputer.local
+        user_name: root
+        root_password: abcdef
+      cloud_init_nics:
+        - nic_name: eth0
+          nic_boot_protocol: dhcp
+          nic_on_boot: true
+        - nic_name: eth1
+          nic_boot_protocol: static
+          nic_ip_address: 10.34.60.86
+          nic_netmask: 255.255.252.0
+          nic_gateway: 10.34.63.254
+          nic_on_boot: true

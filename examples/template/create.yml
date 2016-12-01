@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create template from vm
+    ovirt_templates:
+      auth: "{{ ovirt_auth }}"
+      cluster: mycluster
+      name: mytemplate
+      vm: myvm
+      description: Test

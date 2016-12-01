@@ -1,0 +1,36 @@
+---
+- name: Deploy oVirt engine
+  hosts: engine
+  gather_facts: no
+  vars_files:
+    - roles/ovirt-engine-deploy/vars/main.yml
+  vars:
+    ovirt_engine_passsword: 123456
+    ovirt_engine_hostname: ovirt.local
+
+  tasks:
+    - name: Login to oVirt
+      ovirt_auth:
+        url: https://{{ ovirt_engine_hostname }}/ovirt-engine/api
+        username: admin@internal
+        ca_file: /etc/pki/ovirt-engine/ca.pem
+        password: "{{ ovirt_engine_passsword }}"
+      tags:
+        - always
+
+    - name: Negative permissions tests
+      include: negative/permissions_negative.yml
+      tags:
+        - permissions
+
+    - name: Negative users tests
+      include: negative/users_groups_negative.yml
+      tags:
+        - users
+
+    - name: Logout from oVirt
+      ovirt_auth:
+        state: absent
+        ovirt_auth: "{{ ovirt_auth }}"
+      tags:
+        - always

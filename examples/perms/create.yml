@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Add permissions to user
+    ovirt_permissions:
+      auth: "{{ ovirt_auth }}"
+      user_name: user1
+      authz_name: internal-authz
+      object_type: vm
+      object_name: myvm
+      role: UserVmManager

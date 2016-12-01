@@ -1,0 +1,46 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create cluster
+    ovirt_clusters:
+      auth: "{{ ovirt_auth }}"
+      datacenter: Default
+      name: myclusterX
+      cpu_type: Intel Nehalem Family
+      description: mycluster
+      switch_type: legacy
+      compatibility_version: 4.0
+      ballooning: true
+      gluster: false
+      threads_as_cores: true
+      ha_reservation: true
+      trusted_service: false
+      host_reason: false
+      vm_reason: true
+      ksm_numa: true
+      memory_policy: disabled
+      fence_enabled: false
+      fence_skip_if_sd_active: false
+      fence_skip_if_connectivity_broken: false
+      fence_connectivity_threshold: 50
+      resilience_policy: migrate
+      migration_bandwidth: custom
+      migration_bandwidth_limit: 100
+      migration_auto_converge: false
+      migration_compressed: false
+      migration_policy: legacy
+      serial_policy: host
+      scheduling_policy: power_saving
+      rng_sources:
+        - hwrng

@@ -139,7 +139,7 @@
     - "{{ iso_nfs }}"
     - "{{ export_nfs }}"
   until: job_result.finished
-  retries: 30
+  retries: 40
   delay: 5
 
 # TODO: import_non_template_from_glance

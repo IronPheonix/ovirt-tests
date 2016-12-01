@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create vmpool
+    ovirt_vmpools:
+      auth: "{{ ovirt_auth }}"
+      cluster: mycluster
+      name: myvmpool
+      template: mytemplate
+      vm_count: 2
+      prestarted: 2
+      vm_per_user: 1

@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create network
+    ovirt_networks:
+      auth: "{{ ovirt_auth }}"
+      datacenter: mydatacenter
+      name: mynetwork
+      vlan_tag: 4
+      vm_network: true

@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create affinity label
+    ovirt_affinity_labels:
+      auth: "{{ ovirt_auth }}"
+      cluster: mycluster
+      name: mytest
+      vms: []
+      hosts:
+        - myhost1

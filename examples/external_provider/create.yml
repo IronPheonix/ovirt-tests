@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      insecure: "{{ insecure }}"
+
+  - name: Create foreman
+    ovirt_external_providers:
+      auth: "{{ ovirt_auth }}"
+      name: sat
+      type: foreman
+      url: https://sat.sat2.rhev.lab.eng.brq.redhat.com
+      username: admin
+      password: 123456
