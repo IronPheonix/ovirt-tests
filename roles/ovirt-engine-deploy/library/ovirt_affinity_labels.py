@@ -33,7 +33,6 @@ from ansible.module_utils.ovirt import (
     check_sdk,
     create_connection,
     ovirt_full_argument_spec,
-    search_by_name,
 )
 
 
@@ -53,9 +52,12 @@ options:
         required: true
     state:
         description:
-            - "Should the affinity label be present or absent"
+            - "Should the affinity label be present or absent."
         choices: ['present', 'absent']
         default: present
+    cluster:
+        description:
+            - "Name of the cluster where vms and hosts resides."
     vms:
         description:
             - "List of the VMs names, which should have assigned this affinity label."
@@ -72,15 +74,17 @@ EXAMPLES = '''
 # Create(if not exists) and assign affinity label to vms vm1 and vm2 and host host1
 - ovirt_affinity_labels:
     name: mylabel
+    cluster: mycluster
     vms:
       - vm1
       - vm2
     hosts:
       - host1
 
-# To detach all VMs from label:
+# To detach all VMs from label
 - ovirt_affinity_labels:
     name: mylabel
+    cluster: mycluster
     vms: []
 
 # Remove affinity label
@@ -121,10 +125,17 @@ class AffinityLabelsModule(BaseModule):
             objs = self._connection.follow_link(getattr(entity, name))
             objs_names = defaultdict(list)
             for obj in objs:
-                objs_names[objs_service.service(obj.id).get().name].append(obj.id)
+                labeled_entity = objs_service.service(obj.id).get()
+                if self._module.params['cluster'] is None:
+                    objs_names[labeled_entity.name].append(obj.id)
+                elif self._connection.follow_link(labeled_entity.cluster).name == self._module.params['cluster']:
+                    objs_names[labeled_entity.name].append(obj.id)
+
             for obj in self._module.params[name]:
                 if obj not in objs_names:
-                    for obj_id in objs_service.list(search='name=%s' % obj):
+                    for obj_id in objs_service.list(
+                        search='name=%s and cluster=%s' % (obj, self._module.params['cluster'])
+                    ):
                         label_service = getattr(self._service.service(entity.id), '%s_service' % name)()
                         if not self._module.check_mode:
                             label_service.add(**{
@@ -152,6 +163,7 @@ def main():
             choices=['present', 'absent'],
             default='present',
         ),
+        cluster=dict(default=None),
         name=dict(default=None, required=True),
         vms=dict(default=None, type='list'),
         hosts=dict(default=None, type='list'),
@@ -159,6 +171,9 @@ def main():
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
+        required_if=[
+            ('state', 'present', ['cluster']),
+        ],
     )
     check_sdk(module)
 

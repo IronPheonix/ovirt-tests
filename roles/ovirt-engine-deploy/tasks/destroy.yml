@@ -1,3 +1,0 @@
----
-- name: Destroy AAA
-  include: aaa_destroy.yml
