@@ -12,9 +12,8 @@
       password: "{{ password }}"
       insecure: "{{ insecure }}"
 
-  - name: Create datacenter
-    ovirt_datacenters:
+  - name: Remove MAC pool
+    ovirt_mac_pools:
       auth: "{{ ovirt_auth }}"
-      name: mydatacenter2
-      local: true
-      mac_pool: test_pool
+      state: absent
+      name: test_pool

@@ -12,9 +12,13 @@
       password: "{{ password }}"
       insecure: "{{ insecure }}"
 
-  - name: Create datacenter
-    ovirt_datacenters:
+  - name: Create MAC pool
+    ovirt_mac_pools:
       auth: "{{ ovirt_auth }}"
-      name: mydatacenter2
-      local: true
-      mac_pool: test_pool
+      name: test_pool
+      description: Test pool
+      allow_duplicates: false
+      ranges:
+        - 00:1a:4a:16:01:51,00:1a:4a:16:01:61
+        - 00:1a:4a:16:03:51,00:1a:4a:16:03:61
+        - 00:1a:4a:16:04:51,00:1a:4a:16:04:61

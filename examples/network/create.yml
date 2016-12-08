@@ -15,7 +15,14 @@
   - name: Create network
     ovirt_networks:
       auth: "{{ ovirt_auth }}"
-      datacenter: mydatacenter
-      name: mynetwork
+      datacenter: test_dc
+      name: test_network
       vlan_tag: 4
-      vm_network: true
+      vm_network: yes
+      clusters:
+        - name: test_cluster
+          assigned: yes
+          required: yes
+          display: no
+          migration: yes
+          gluster: yes

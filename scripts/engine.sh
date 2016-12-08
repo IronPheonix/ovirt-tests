@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo echo "nameserver 8.8.8.8" > /etc/resolv.conf
+#sudo echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
 REALEASE_41=http://resources.ovirt.org/pub/yum-repo/ovirt-release41-pre.rpm
 REALEASE_40=http://resources.ovirt.org/pub/yum-repo/ovirt-release40-pre.rpm

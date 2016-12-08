@@ -12,9 +12,10 @@
       password: "{{ password }}"
       insecure: "{{ insecure }}"
 
-  - name: Create datacenter
-    ovirt_datacenters:
+  - name: List vms
+    ovirt_vms_facts:
       auth: "{{ ovirt_auth }}"
-      name: mydatacenter2
-      local: true
-      mac_pool: test_pool
+ 
+  - name: Print vms
+    debug:
+      var: ovirt_vms

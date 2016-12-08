@@ -15,9 +15,13 @@
   - name: Add SD
     ovirt_storage_domains:
       auth: "{{ ovirt_auth }}"
-      name: data3
-      host: myhost1
-      data_center: mydatacenter
+      name: data
+      description: test
+      host: host1
+      data_center: test_dc
       nfs:
-        address: 192.168.1.1
-        path: /om02
+        address: 192.168.200.13
+        path: /exports/nfs_clean/share1
+        version: v3
+        timeout: 100
+        retrans: 10

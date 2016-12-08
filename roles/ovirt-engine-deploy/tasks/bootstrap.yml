@@ -1,5 +1,15 @@
 ---
 ## Bootstrap
+- name: Create MAC pool
+  ovirt_mac_pools:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ mac_pool }}"
+    description: Test pool
+    allow_duplicates: false
+    ranges:
+      - 00:1a:4a:16:03:51,00:1a:4a:16:03:61
+      - 00:1a:4a:16:04:51,00:1a:4a:16:04:61
+
 - name: Add datacenter
   ovirt_datacenters:
     auth: "{{ ovirt_auth }}"
@@ -17,10 +27,29 @@
     compatibility_version: "{{ compatibility_version }}"
     datacenter: "{{ datacenter }}"
 
-# fatal: [engine]: FAILED! => {"changed": false, "failed": true, "msg": "Fault reason is \"Operation Failed\".
-# Fault detail is \"[Cannot edit Quota. Limitation can not be configured as specific and general for the same Quota.
-# Please choose whether the limitation should be enforced on the Data Center (global) or for specific storage domain or cluster.]\".
-# HTTP response code is 409."}
+- name: Create new vlan and assign it to cluster
+  ovirt_networks:
+    auth: "{{ ovirt_auth }}"
+    datacenter: "{{ datacenter }}"
+    name: "{{ vlan_100 }}"
+    vlan_tag: 100
+    vm_network: true
+    description: VM Network on VLAN 100
+    clusters:
+      - name: "{{ cluster }}"
+        assigned: true
+        required: false
+
+- name: Add non VM network
+  ovirt_networks:
+    auth: "{{ ovirt_auth }}"
+    datacenter: "{{ datacenter }}"
+    name: "{{ vlan_200 }}"
+    vlan_tag: 200
+    vm_network: false
+    description: Non VM Network on VLAN 200, MTU 9000
+    mtu: 9000
+
 - name: Add DC quota
   ovirt_quotas:
     auth: "{{ ovirt_auth }}"
@@ -37,7 +66,6 @@
     storages:
       - name: "{{ data_name }}"
         size: 100
-  ignore_errors: true
 
 - name: Add host to oVirt engine
   ovirt_hosts:
@@ -62,15 +90,17 @@
   retries: 30
   delay: 7
 
-#- name: Install dashboard package
-#  yum:
-#    name: cockpit-ovirt-dashboard
-#    state: present
-#  delegate_to: "{{ item }}"
-#  with_items:
-#    - host1
-#    - host2
-#  ignore_errors: yes
+- name: Assign VLAN to eth0 on host2
+  ovirt_host_networks:
+    auth: "{{ ovirt_auth }}"
+    name: host2
+    interface: eth0
+    networks:
+      - name: "{{ vlan_100 }}"
+        boot_protocol: dhcp
+        version: v4
+    save: true
+    check: true
 
 - name: Add NFS storage
   ovirt_storage_domains:
@@ -81,6 +111,9 @@
     nfs:
       address: 192.168.200.13
       path: /exports/nfs_clean/share1
+      version: v4
+      timeout: 100
+      retrans: 10
 
 - name: Get lun id
   shell: multipath -ll -v1 |sort |head -n1
@@ -142,8 +175,6 @@
   retries: 40
   delay: 5
 
-# TODO: import_non_template_from_glance
-
 - name: Import template from glance
   ovirt_templates:
     auth: "{{ ovirt_auth }}"
@@ -160,22 +191,3 @@
     auth: "{{ ovirt_auth }}"
     name: "{{ datacenter }}"
     quota_mode: audit
-
-- name: Add VM network
-  ovirt_networks:
-    auth: "{{ ovirt_auth }}"
-    datacenter: "{{ datacenter }}"
-    name: "{{ vlan_100 }}"
-    vlan_tag: 100
-    vm_network: true
-    description: VM Network on VLAN 100
-
-- name: Add non VM network
-  ovirt_networks:
-    auth: "{{ ovirt_auth }}"
-    datacenter: "{{ datacenter }}"
-    name: "{{ vlan_200 }}"
-    vlan_tag: 200
-    vm_network: false
-    description: Non VM Network on VLAN 200, MTU 9000
-    mtu: 9000

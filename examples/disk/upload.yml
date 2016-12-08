@@ -12,9 +12,11 @@
       password: "{{ password }}"
       insecure: "{{ insecure }}"
 
-  - name: Create datacenter
-    ovirt_datacenters:
+  - name: Upload disk
+    ovirt_disks:
       auth: "{{ ovirt_auth }}"
-      name: mydatacenter2
-      local: true
-      mac_pool: test_pool
+      name: test7
+      size: 1GiB
+      format: cow
+      image_path: /home/omachace/libvirt/test3.qcow2
+      storage_domain: data

@@ -15,7 +15,5 @@
   - name: Create disk and attach it to VM
     ovirt_disks:
       auth: "{{ ovirt_auth }}"
-      name: mydisk
-      size: 1GiB
-      storage_domain: data
-      vm_id: 
+      id: 3e7aa474-38bc-4cd8-af84-50ca9373ba08
+      storage_domain: data2

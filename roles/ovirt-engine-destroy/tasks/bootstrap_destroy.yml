@@ -1,16 +1,36 @@
 ---
+- name: Unassign VLAN from eth0 on host2
+  ovirt_host_networks:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: host2
+    interface: eth0
+    networks:
+      - name: VLAN100_Network
+    save: true
+    check: true
+
+- name: Unassign network from cluster
+  ovirt_networks:
+    auth: "{{ ovirt_auth }}"
+    datacenter: "{{ datacenter }}"
+    name: "{{ vlan_100 }}"
+    clusters:
+      - name: "{{ cluster }}"
+        assigned: false
+
 - name: Remove VM network
   ovirt_networks:
     auth: "{{ ovirt_auth }}"
     state: absent
-    datacenter_name: "{{ datacenter }}"
+    datacenter: "{{ datacenter }}"
     name: "{{ vlan_100 }}"
 
 - name: Remove non VM network
   ovirt_networks:
     auth: "{{ ovirt_auth }}"
     state: absent
-    datacenter_name: "{{ datacenter }}"
+    datacenter: "{{ datacenter }}"
     name: "{{ vlan_200 }}"
 
 - name: Remove iSCSI storage
@@ -79,3 +99,9 @@
     auth: "{{ ovirt_auth }}"
     state: absent
     name: "{{ cluster }}"
+
+- name: Delete MAC pool
+  ovirt_mac_pools:
+    auth: "{{ ovirt_auth }}"
+    state: absent
+    name: "{{ mac_pool }}"

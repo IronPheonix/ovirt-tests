@@ -12,9 +12,13 @@
       password: "{{ password }}"
       insecure: "{{ insecure }}"
 
-  - name: Create datacenter
-    ovirt_datacenters:
+  - name: Assign VLAN to eth0 on host2
+    ovirt_host_networks:
       auth: "{{ ovirt_auth }}"
-      name: mydatacenter2
-      local: true
-      mac_pool: test_pool
+      name: host2
+      interface: eth0
+      networks:
+        - name: VLAN100_Network
+          boot_protocol: none
+      save: true
+      check: true

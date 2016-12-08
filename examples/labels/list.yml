@@ -15,7 +15,7 @@
   - name: List labels
     ovirt_affinity_labels_facts:
       auth: "{{ ovirt_auth }}"
-      host: myhost2
+      host: myhost1
  
   - name: Print labels
     debug:
